@@ -1,0 +1,10 @@
+
+presentations/.DS_Store
+presentations/pres_intro/.DS_Store
+*.vrb
+*.toc
+*.snm
+*.out
+*.nav
+*.log
+*.aux
