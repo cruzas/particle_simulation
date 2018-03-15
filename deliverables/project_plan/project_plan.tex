@@ -1,0 +1,93 @@
+\documentclass[unicode,11pt,a4paper,oneside,numbers=endperiod,openany]{scrartcl}
+
+\usepackage{assignment}
+\usepackage{textcomp}
+\usepackage{float}
+
+
+\begin{document}
+
+\setassignment
+
+
+\serieheader{Software Atelier: Simulation, Data Science \& Supercomputing}{2018}{Authors: Samuel A. Cruz Alegr\'{i}a, Alessandra M. de Felice, Hrishikesh R. Gupta}{}{Project Proposal}{}
+\newline
+
+\section{Topic}
+\large{\textit{\textbf{Particle Simulations with OpenACC: Speedup and Scaling}}}
+\section{Domain}
+Physics
+
+
+\section{Abstract}
+
+\begin{abstract}
+The simulation of particle systems has become essential for visualizing the behaviour of relevant physical systems, ranging from simulations of molecular dynamics to simulations of colliding galaxies. The computational complexity of performing simulations grows with the number of particles in the system. Performing realistic simulations may necessitate a plethora of particles, leading to immense computational costs. Simulating such systems may thus require increasingly longer time frames. Hence, performing increasingly complex simulations may become impractical for single-core simulation tools. Thus, it is essential to develop simulation tools which perform practically independent of the number of bodies used in a simulation. A possibility to reduce the time required for simulations is to distribute the workload among different parallel entities, such as different processes or threads. This paper aims to explore the efficiency and scalability of parallelization in order to improve the performance of a simulation currently run on a single core. This is achieved by incorporating the OpenACC programming standard, which is a programming standard for parallel computing that utilizes a hardware accelerator, such as a GPU. 
+
+\section{Goal}
+
+The goal of this project is to optimize particle simulation runtime using OpenACC parallelization to study scaling with an increasing number of particles.
+
+\section{Plan}
+
+The plan for our project is as follows (date format is DD.MM.YY):
+%
+\begin{table}[H]
+	\centering
+\begin{tabular}{| l | l | l |}
+	\hline
+	\emph{Task} & \emph{Begin date} & \emph{End date}\\
+	\hline
+	Study Patrick Zulian's material & 14.03.18 & 18.03.18\\
+	\hline
+	Develop serial code & 19.03.18 & 28.03.18\\
+	\hline
+	Work on presentation for week 4/5 & 19.03.18 & 28.03.18\\
+	\hline
+	Investigate parallelization methods & 19.03.18 & 28.03.18\\
+	\hline
+	Implement OpenACC in the serial code & 29.03.18 & 18.04.18\\
+	\hline
+	Gather results \& begin white paper & 19.04.18 & 25.04.18\\
+	\hline
+	Finalize white paper & 26.04.18 & 21.05.18\\
+	\hline
+	Prepare final presentation & 22.05.18 & 05.06.18\\
+	\hline
+	Prepare project poster & 22.05.18 & 15.06.18\\
+	\hline
+\end{tabular}
+\end{table}
+%
+
+\section{Deliverables}
+
+The deliverables, based on our project plan, are the following:
+%
+\begin{itemize}
+	\item White paper
+	\item Project poster
+\end{itemize}
+%
+
+\section{Milestones}
+
+The milestones, based on our project plan, are the following:
+%
+\begin{itemize}
+	\item 
+\end{itemize}
+%
+
+\section{Contact Details}
+%
+\begin{tabular}{ l | l }
+	Samuel A. Cruz Alegr\'{i}a & samuel.adolfo.cruz.alegria@usi.ch\\
+	Alessandra M. de Felice & alessandra.de.felice@usi.ch\\
+	Hrishikesh R. Gupta & hrishikesh.gupta@usi.ch
+\end{tabular}
+%
+
+\end{abstract}
+
+\end{document}

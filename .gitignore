@@ -10,3 +10,7 @@ presentations/pres_intro/.DS_Store
 *.aux
 deliverables/proposal/.DS_Store
 deliverables/.DS_Store
+*.lb
+*.fdb_latexmk
+*.fls
+deliverables/project_plan/project_plan.synctex.gz
