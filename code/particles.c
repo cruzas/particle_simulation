@@ -606,8 +606,11 @@ init_particles()
 
     pd[px_i] = (double) (rand() % DEFAULT_WIDTH);   // set x position
     pd[py_i] = (double) (rand() % DEFAULT_HEIGHT);  // set y position
-    pd[vx_i] = rand() * fx;  // set vx component
-    pd[vy_i] = rand() * fy;  // set vy component
+    pd[vx_i] = rand() / (float) RAND_MAX * fx;  // set vx component
+    pd[vy_i] = rand() / (float) RAND_MAX * fy;  // set vy component
+
+    fprintf(stdout, "v_x=%f\n", pd[vx_i]);
+    fprintf(stdout, "v_y=%f\n", pd[vy_i]);
 
     // correct starting x position
     if (pd[px_i] - radius <= 0)
