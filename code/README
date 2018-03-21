@@ -1,0 +1,44 @@
+/**
+* @author Samuel A. Cruz Alegría
+* @version 2017-06-04 (YYYY-MM-DD)
+*
+* This program produces an animation of a number of particles subjected to a
+* constant force field. The animation is based on a simulation of n
+* ball-shaped particles moving and bouncing around in a 2D space defined by
+* the animation window. Particles bounce off walls, but do do not interact
+* with each other.
+*
+* NOTE: You can close the GTK window by pressing 'q' or 'Q'.
+*
+* NOTE: I give special thanks to Marco Tollini for giving me the idea of
+* storing all particle information in a float array.
+* A single particle is represented by four consecutive elements in the
+* float array. This float array is named pd (see below).
+* For instance, for the first particle, pd[0] represents the x-coordinate of
+* the particle, pd[1] represents the y-coordinate of the particle, pd[2]
+* represents the horizontal component of the the particle's velocity, and pd[3]
+* represents the vertical component of the particle's velocity.
+*
+* Through another suggestion of Marco Tollini's, I also realized that I could
+* set the total number of global work items in the draw_particles and
+* update_particles kernels to be n*4, where n is the number of particles:
+* this allowed for straightforward referencing of the particle details in
+* these kernels.
+*
+* NOTE: Furthermore, the algorithm for drawing the particles is based on
+* https://stackoverflow.com/questions/1201200/fast-algorithm-for-drawing-filled-circles/1201227
+*
+* NOTE: The motion of particles was implemented based on
+* https://cg.ivd.kit.edu/downloads/GPGPU_assignment_4.pdf
+* A paper which may have given me insight into other issues as well.
+*
+* REVIEW: The known limitations in this program are:
+* 1. The behaviour is not as expected when the window is resized: although
+* having a resizable window was not a specification of the assignment.
+* 2. The motion of the particles may not be perfectly calculated (please refer
+* to update_particles.cl).
+* 3. The drawing of the balls may not be perfect (please refer to
+* draw_particles.cl). If you look carefully to the left of the window,
+* especially when there are many balls (e.g., 20), it seems a few pixels are
+* painted when they should not be.
+*/
