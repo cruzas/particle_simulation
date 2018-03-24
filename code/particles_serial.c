@@ -1,6 +1,6 @@
 /**
 * @author Samuel A. Cruz Alegría
-* @version 2017-06-04 (YYYY-MM-DD)
+* @version 2018-03-24 (YYYY-MM-DD)
 *
 * This program produces an animation of a number of particles subjected to a
 * constant force field. The animation is based on a simulation of n
@@ -43,13 +43,6 @@
 * painted when they should not be.
 */
 
-#ifdef __APPLE__
-#include <OpenCL/opencl.h>
-#include <unistd.h>
-#else
-#include <CL/cl.h>
-#endif
-
 #include <gdk/gdkkeysyms.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
@@ -61,7 +54,7 @@
 #define DEFAULT_WIDTH 800   // default WIDTH of the window
 #define DEFAULT_HEIGHT 800  // default HEIGHT of the window
 #define DEBUGGING 1
-// #undef DEBUGGING
+#undef DEBUGGING
 
 static int n;             // number of particles
 static float fx;          // horizontal component of the force field
@@ -71,24 +64,9 @@ static float trace;       // shading factor for the trace of a particle
 static float delta;       // time, in seconds, inter-frame interval
 static float dim_factor;  // 1.0-trace
 static float g;           // gravitational factor (in y direction)
-static const char * kernel_sources[] = { "draw_particles.cl", "update_particles.cl", "trace_particles.cl" };
-static const char * kernel_names[] = { "draw_particles_kernel", "update_particles_kernel", "trace_particles_kernel" };
 
 static GdkPixbuf * pixbuf;  // pixel buffer
 static float *pd;           // particle details array
-
-// OpenCL variables
-cl_int err;
-cl_device_id device;
-cl_context context;
-cl_command_queue queue;
-// OpenCL kernels
-cl_kernel draw_kernel;
-cl_kernel update_kernel;
-cl_kernel trace_kernel;
-// OpenCL memory objects
-cl_mem kernel_pixels; // device input/output pixels
-cl_mem kernel_pd;     // device particle details
 
 static void print_usage();
 static gint timeout(void * user_data);
@@ -110,9 +88,8 @@ int
 main(int argc, char *argv[])
 {
   // do all necessary initializations
-  if (!init_params(argc, argv) || !set_up_opencl_prelim() || !init_particles()) {
+  if (!init_params(argc, argv) || !init_particles())
     return -1;
-  }
 
   #ifdef DEBUGGING
     // print all initial particle information
@@ -121,24 +98,7 @@ main(int argc, char *argv[])
 
   // animate the particles
   animate_particles();
-  //
-  // // release OpenCL memory objects
-  // if (kernel_pixels)
-  // clReleaseMemObject(kernel_pixels), kernel_pixels = 0;
-  //
-  // if (kernel_pd)
-  // clReleaseMemObject(kernel_pd), kernel_pd = 0;
-  //
-  // // release OpenCL kernels
-  // clReleaseKernel(draw_kernel);
-  // clReleaseKernel(update_kernel);
-  // clReleaseKernel(trace_kernel);
-  // // release OpenCL context
-  // clReleaseContext(context);
-  // // release OpenCL queue
-  // clReleaseCommandQueue(queue);
-  // // free particle details
-  // free(pd);
+
   return 0;
 }
 
@@ -157,7 +117,7 @@ animate_particles() {
   // create new window
   GtkWidget * window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   // set window title
-  gtk_window_set_title((GtkWindow *)window, "Particle Simulation (GPU)");
+  gtk_window_set_title((GtkWindow *)window, "Particle Simulation (CPU)");
   // resize window to desired size
   gtk_window_resize(GTK_WINDOW(window), width, height);
 
@@ -218,6 +178,7 @@ trace_particles(void *user_data)
   // pixel data of the pixel buffer
   guchar *pixels = gdk_pixbuf_get_pixels(pixbuf);
 
+  // Multiply each pixel by dim factor to create trace
   for (int x = 0; x < width; ++x) {
     for (int y = 0; y < height; ++y) {
       guchar * pixel = pixels + y*row_stride + x*n_channels;
@@ -245,15 +206,7 @@ update_particles(void *user_data)
   // height of pixel buffer
   int height = gdk_pixbuf_get_height(pixbuf);
 
-  // total bytes from particle details
-  size_t size_pd = sizeof(*pd) * n * 4;
-  // total number of global work items
-  size_t g_work_size = n * 4;
-  // number of dimensions used to specify the global work-items and work-items
-  // in the work-group
-  size_t work_dim = 1;
-
-  // Loop through the n particles.
+  // Loop through all particles
   for (int i = 0; i < n; ++i) {
     int px_i = i*4;      // x-position index
     int py_i = i*4 + 1;  // y-position index
@@ -315,106 +268,35 @@ draw_particles(void *user_data) {
   // pixel data of the pixel buffer
   guchar *pixels = gdk_pixbuf_get_pixels(pixbuf);
 
-  // total bytes from particle details
-  size_t size_pd = sizeof(*pd) * n * 4;
-  // total bytes from pixels
-  size_t size_pixels = sizeof(guchar) * width * height * n_channels;
-  // total number of global work items
-  size_t g_work_size = n * 4;
-  // number of dimensions used to specify the global work-items and work-items
-  // in the work-group
-  size_t work_dim = 1;
+  // Loop through all particles
+  for (int i = 0; i < n; ++i) {
+    int px_i = i*4;      // x-position index
+    int py_i = i*4 + 1;  // y-position index
 
-  // create buffer object for kernel pixels
-  kernel_pixels = clCreateBuffer(context, CL_MEM_READ_WRITE, size_pixels, NULL, &err);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to create pixels buffer on device.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
+    float px = pd[px_i];
+    float py = pd[py_i];
 
-  // write our pixels into the input kernel_pixels in device memory
-  err = clEnqueueWriteBuffer(queue, kernel_pixels, CL_TRUE, 0, size_pixels, pixels, 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to write input pixels onto the device.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
+    // draw filled circle
+    // based on: https://stackoverflow.com/questions/1201200/fast-algorithm-for-drawing-filled-circles/1201227
+    for(int y = -radius; y <= radius; ++y) {
+      for(int x = -radius; x <= radius; ++x) {
+        if(x*x + y*y <= radius*radius) {
+          int yind = (int)(py+y) * row_stride;  // y index
+          int xind = (int)(px+x) * n_channels;  // x index
+          int pixind = yind + xind; // pixel index
 
-  // create buffer object for kernel particle details
-  kernel_pd = clCreateBuffer(context, CL_MEM_READ_WRITE, size_pd, NULL, &err);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to create particle details buffer on device.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
+          for (int c = 0; c < n_channels; ++c)
+            pixels[pixind + c] = 255;
 
-  // write our particle details into the input kernel_pd in device memory
-  err = clEnqueueWriteBuffer(queue, kernel_pd, CL_TRUE, 0, size_pd, pd, 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to write input particle details onto the device.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
-
-  // set the arguments to our draw_kernel
-  err  = clSetKernelArg(draw_kernel, 0 , sizeof(cl_mem) , &kernel_pixels);
-  err |= clSetKernelArg(draw_kernel, 1 , sizeof(cl_mem),  &kernel_pd);
-  err |= clSetKernelArg(draw_kernel, 2 , sizeof(int),     &n);
-  err |= clSetKernelArg(draw_kernel, 3 , sizeof(int),     &width);
-  err |= clSetKernelArg(draw_kernel, 4 , sizeof(int),     &height);
-  err |= clSetKernelArg(draw_kernel, 5 , sizeof(int),     &row_stride);
-  err |= clSetKernelArg(draw_kernel, 6 , sizeof(int),     &n_channels);
-  err |= clSetKernelArg(draw_kernel, 7 , sizeof(float),   &radius);
-  err |= clSetKernelArg(draw_kernel, 8 , sizeof(float),   &delta);
-  err |= clSetKernelArg(draw_kernel, 9 , sizeof(float),   &dim_factor);
-  err |= clSetKernelArg(draw_kernel, 10, sizeof(float),   &g);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to set kernel parameters.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
-
-  // execute the kernel over the entire range of the data set
-  err = clEnqueueNDRangeKernel(queue, draw_kernel, work_dim, NULL, &g_work_size, NULL, 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to invoke kernel.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
-
-  // wait for the command queue to get serviced before reading back results
-  clFinish(queue);
-
-  // read the kernel_pixels from the device (blocking)
-  err = clEnqueueReadBuffer(queue, kernel_pixels, CL_TRUE, 0, size_pixels, pixels , 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to read output pixels from device.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
-  }
-
-  // read the kernel_pd from the device (blocking)
-  err = clEnqueueReadBuffer(queue, kernel_pd, CL_TRUE, 0, size_pd, pd , 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to read output particle details from device.\n%s\n",
-    util_error_message(err));
-    goto cl_release_mem_objects;
+        }
+      }
+    }
   }
 
   // draw the updated pixel buffer
   gdk_draw_pixbuf(widget->window, NULL, pixbuf, 0, 0, 0, 0, width, height, GDK_RGB_DITHER_NONE, 0, 0);
 
-  // release OpenCL resources on success
-  clReleaseMemObject(kernel_pixels), kernel_pixels = 0;
-  clReleaseMemObject(kernel_pd), kernel_pd = 0;
   return 1;
-
-  // release OpenCL resources on error
-  cl_release_mem_objects:
-  clReleaseMemObject(kernel_pixels), kernel_pixels = 0;
-  clReleaseMemObject(kernel_pd), kernel_pd = 0;
-  return 0;
 }
 
 /* Initialize default parameters.
@@ -452,62 +334,6 @@ init_params(int argc, char *argv[])
     printf("dim_factor: %f\n", dim_factor);
     printf("g: %f\n", g);
   #endif
-
-  return 1;
-}
-
-/* Set up OpenCL preliminaries.
-* @return 1 on success, 0 on error. */
-int
-set_up_opencl_prelim(){
-  // choose a device
-  if (util_choose_device(&device) != 0) {
-    printf("Failed to load device.\n");
-    return 0;
-  }
-
-  // set up OpenCL context
-  context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to create context.\n%s\n", util_error_message(err));
-    return 0;
-  }
-
-  // compile OpenCL draw_kernel
-  if (util_compile_kernel(kernel_sources, sizeof(kernel_sources)/sizeof(const char *), kernel_names[0], device, context, &draw_kernel) != 0) {
-    clReleaseContext(context);
-    printf("Could not compile draw_kernel.\n");
-    return 0;
-  }
-
-  // compile OpenCL update_kernel
-  if (util_compile_kernel(kernel_sources, sizeof(kernel_sources)/sizeof(const char *), kernel_names[1], device, context, &update_kernel) != 0) {
-    clReleaseKernel(draw_kernel);
-    clReleaseContext(context);
-    printf("Could not compile update_kernel.\n");
-    return 0;
-  }
-
-  // compile OpenCL trace_kernel
-  if (util_compile_kernel(kernel_sources, sizeof(kernel_sources)/sizeof(const char *), kernel_names[2], device, context, &trace_kernel) != 0) {
-    clReleaseKernel(draw_kernel);
-    clReleaseKernel(update_kernel);
-    clReleaseContext(context);
-    printf("Could not compile trace_kernel.\n");
-    return 0;
-  }
-
-  // set up device queue
-  queue = clCreateCommandQueue(context, device, 0, &err);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to create command queue.\n%s\n",
-    util_error_message(err));
-    clReleaseKernel(draw_kernel);
-    clReleaseKernel(update_kernel);
-    clReleaseKernel(trace_kernel);
-    clReleaseContext(context);
-    return 0;
-  }
 
   return 1;
 }
