@@ -193,9 +193,8 @@ timeout(void * user_data)
 
   // status is 1 on success, 0 on error
   int status = trace_particles(user_data);
-  // status |= draw_particles(user_data);
-  // return (status |= update_particles(user_data));
-  return status;
+  status |= draw_particles(user_data);
+  return (status |= update_particles(user_data));
 }
 
 /*
@@ -254,63 +253,46 @@ update_particles(void *user_data)
   // in the work-group
   size_t work_dim = 1;
 
-  // create buffer object for kernel particle details
-  kernel_pd = clCreateBuffer(context, CL_MEM_READ_WRITE, size_pd, NULL, &err);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to create particle details buffer on device.\n%s\n",
-    util_error_message(err));
-    goto cleanup_kernel_pd;
+  // Loop through the n particles.
+  for (int i = 0; i < n; ++i) {
+    int px_i = i*4;      // x-position index
+    int py_i = i*4 + 1;  // y-position index
+    int vx_i = i*4 + 2;  // vx-component index
+    int vy_i = i*4 + 3;  // vy-component index
+
+    float px = pd[px_i];
+    float py = pd[py_i];
+    float vx = pd[vx_i];
+    float vy = pd[vy_i];
+
+    // set new x direction based on horizontal collision with wall
+    if (px + radius >= width || px - radius <= 0)
+      vx = vx * -1;
+
+    // set new y direction based on vertical collision with wall
+    if (py - radius <= 0 || py + radius >= height)
+      vy = vy * -1;
+
+    pd[px_i] = px + (vx*delta);
+    pd[py_i] = py - (vy*delta) - (0.5 * g * delta * delta);
+
+    pd[vx_i] = vx;  // vx only as acceleration in x-direction is 0
+    pd[vy_i] = vy + 0.5*(g)*delta;
+
+    // correct x position in case updated position goes past wall
+    if (pd[px_i] - radius <= 0)
+      pd[px_i] = radius;
+    else if (pd[px_i] + radius >= height)
+      pd[px_i] = width - radius;
+
+    // correct y position in case updated position goes past wall
+    if (pd[py_i] - radius <= 0)
+      pd[py_i] = radius;
+    else if (pd[py_i] + radius >= height)
+      pd[py_i] = height - radius;
   }
 
-  // write our particle details into the input kernel_pd in device memory
-  err = clEnqueueWriteBuffer(queue, kernel_pd, CL_TRUE, 0, size_pd, pd, 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to write input particle details onto the device.\n%s\n",
-    util_error_message(err));
-    goto cleanup_kernel_pd;
-  }
-
-  // set the arguments to our update_kernel
-  err |= clSetKernelArg(update_kernel, 0, sizeof(cl_mem),  &kernel_pd);
-  err |= clSetKernelArg(update_kernel, 1, sizeof(int),     &n);
-  err |= clSetKernelArg(update_kernel, 2, sizeof(int),     &width);
-  err |= clSetKernelArg(update_kernel, 3, sizeof(int),     &height);
-  err |= clSetKernelArg(update_kernel, 4, sizeof(float),   &radius);
-  err |= clSetKernelArg(update_kernel, 5, sizeof(float),   &delta);
-  err |= clSetKernelArg(update_kernel, 6, sizeof(float),   &g);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to set kernel parameters.\n%s\n",
-    util_error_message(err));
-    goto cleanup_kernel_pd;
-  }
-
-  // execute the kernel over the entire range of the data set
-  err = clEnqueueNDRangeKernel(queue, update_kernel, work_dim, NULL, &g_work_size, NULL, 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to invoke kernel.\n%s\n",
-    util_error_message(err));
-    goto cleanup_kernel_pd;
-  }
-
-  // wait for the command queue to get serviced before reading back results
-  clFinish(queue);
-
-  // read the kernel_pd from the device (blocking)
-  err = clEnqueueReadBuffer(queue, kernel_pd, CL_TRUE, 0, size_pd, pd , 0, NULL, NULL);
-  if (err != CL_SUCCESS) {
-    fprintf(stderr, "Failed to read output particle details from device.\n%s\n",
-    util_error_message(err));
-    goto cleanup_kernel_pd;
-  }
-
-  // release OpenCL particle details on success
-  clReleaseMemObject(kernel_pd), kernel_pd = 0;
   return 1;
-
-  // release OpenCL particle details on error
-  cleanup_kernel_pd:
-  clReleaseMemObject(kernel_pd), kernel_pd = 0;
-  return 0;
 }
 
 /*
