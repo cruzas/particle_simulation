@@ -18,8 +18,7 @@ kernel void trace_particles_kernel(global guchar * pixels,
 
         if (x < width && y < height) {
           pixels += y*row_stride + x*n_channels;
-          for(int i = 0; i < n_channels; ++i) {
+          for(int i = 0; i < n_channels; ++i)
             pixels[i] *= dim_factor;
-          }
         }
 }
