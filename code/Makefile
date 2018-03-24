@@ -9,7 +9,7 @@ GTK_LIBS=$(shell pkg-config --libs $(GTK_PACKAGES))
 CFLAGS=-g -Wall -O2 -std=c99 -framework OpenCL $(GTK_CFLAGS)
 LIBS=$(GTK_LIBS)
 
-PROGS=particles
+PROGS=particles_parallel particles_serial
 
 .PHONY: all
 all: $(PROGS)
@@ -17,8 +17,11 @@ all: $(PROGS)
 %: %.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $*.c $(LIBS) -o $@
 
-particles: particles.o opencl_util.o
-	$(CC) $(CFLAGS) $(LDFLAGS) particles.o opencl_util.o $(LIBS) -o $@
+particles_parallel: particles_parallel.o opencl_util.o
+	$(CC) $(CFLAGS) $(LDFLAGS) particles_parallel.o opencl_util.o $(LIBS) -o $@
+
+particles_serial: particles_serial.o opencl_util.o
+	$(CC) $(CFLAGS) $(LDFLAGS) particles_serial.o opencl_util.o $(LIBS) -o $@
 
 .PHONY: clean
 clean:
