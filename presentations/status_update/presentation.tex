@@ -1,0 +1,137 @@
+% Dmitry Mikushin, USI Lugano, dmitry.mikushin@usi.ch,
+% using portions of original style file by Tom Cashman
+%
+% IMPORTANT NOTICE:
+%
+% The USI logo is unique; it is authorized for use only by employees of the
+% Università della Svizzera italiana for work-related projects; others can use them
+% ONLY with prior authorization (contact: press@usi.ch).
+%
+% http://www.press.usi.ch/en/corporate-design/corporate-design-stampa.htm
+%
+% This is an example beamer presentation, which uses Università della Svizzera italiana
+% design theme.
+
+\documentclass[aspectratio=169]{beamer}
+
+\usetheme{usi}
+\usepackage{multirow}
+\usepackage{hhline}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{float}
+\usetikzlibrary{shapes.geometric}
+
+\newcommand\score[2]{
+\pgfmathsetmacro\pgfxa{#1+1}
+\tikzstyle{scorestars}=[star, star points=5, star point ratio=2.25, draw,inner sep=1.3pt,anchor=inner point 3]
+  \begin{tikzpicture}[baseline]
+    \foreach \i in {1,...,#2} {
+    \pgfmathparse{(\i<=#1?"usi@yellow":"gray")}
+    \edef\starcolor{\pgfmathresult}
+    \draw (\i*2.0ex,0) node[name=star\i,scorestars,fill=\starcolor,color=\starcolor]  {};
+   }
+  \end{tikzpicture}
+}
+
+\definecolor{cadmiumgreen}{rgb}{0.0, 0.42, 0.24}
+
+\setlength{\fboxsep}{0.25pt}%
+\setlength{\fboxrule}{0pt}%
+
+\title[Particle Simulations with OpenACC]{\textbf{Particle Simulations with OpenACC: Speedup and Scaling}\\[0.5em] Overview of mathematical models, simulation used, and OpenACC}
+\author{Samuel A. Cruz Alegr\'{i}a, Alessandra M. de Felice, Hrishikesh R. Gupta}
+\institute{(University of Lugano)}
+\date{\today}
+
+
+\begin{document}
+\begin{frame}
+\titlepage
+\end{frame}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Status Update}
+
+Our tasks for this week were the following:
+%
+\begin{itemize}
+	\item Develop serial code.
+	\item Investigate visualization tools.
+	\item Investigate parallelization methods.
+\end{itemize}
+%
+
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Serial Code}
+	The serial code is divided into the following three main sections:
+	%
+	\begin{enumerate}
+		\item Tracing particles (trails or no trails).
+		\item Drawing particles.
+		\item Updating particle details such as position and velocity.
+	\end{enumerate}
+	%
+	
+	For the moment, particle movement doesn't strictly abide to any well-established physics. For instance, particle collisions with each other are not calculated yet.
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Serial Code}
+	Demo...
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Visualization Tools}
+	%
+	\begin{itemize}
+		\item For the time being, the simulation is done in two dimensions. This makes it relatively straightforward to paint the particles on the canvas.
+		\item In three dimensions, we would need to add behaviour for the third dimension and would need to change the way in which particles are currently being drawn.
+		\item In order to minimize time spent in building code for rendering in more than two dimensions, we can choose to use visualization tools.
+	\end{itemize}
+	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Visualization Tools}
+	An option for visualization is \emph{ParaView}.
+	%
+	\begin{itemize}
+		\item Used at the CSCS (Swiss National Supercomputing Centre).
+		\item Open source, used for visualizing two and three-dimensional data sets.
+		\item Platforms supported range from single-processor workstations to multiple-processor distributed-memory supercomputers or workstation clusters.
+	\end{itemize}
+	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{References}
+
+\begin{itemize}
+\small{\item Farber, R., 2016.Parallel programming with OpenACC. Newnes.
+\item Gonzales, R.,  Martin, M., Mittow, N., and Rasmuss, R.,2016, An Introduction to OpenAcc.ECS 158 Final Project.
+\item Li, X., Shih, P.C., Overbey, J., Seals, C. and Lim, A., 2016. Comparing programmer productivity in OpenACC and CUDA: an empirical investigation.International Journal of Computer Science, Engineering and Applications (IJCSEA),6(5), pp.1-15.
+\item Memeti, S., Li, L., Pllana, S., Kołodziej, J. and Kessler, C., 2017, July. Benchmarking OpenCL, OpenACC, OpenMP, and CUDA: programming productivity, performance, and energy consumption. InProceedings of the 2017 Workshop on Adaptive Resource Management and Scheduling for Cloud Computing(pp. 1-6). ACM.
+\item Urbanic, J., 2013. Introduction to Directive Based Programming.
+\item OpenACC Programming and Best Practices. Guide \url{http://www.openacc.org/sites/default/files/inline-files/OpenACC_Programming_Guide_0.pdf}
+\item \url{http://www.nvidia.com/object/what-is-gpu-computing.html}}
+\item Allen, M.P., 2004. Introduction to molecular dynamics simulation. Computational soft matter: from synthetic polymers to proteins, 23, pp.1-28.
+\item Eijkhout, V., 2014. Introduction to High Performance Scientific Computing. Lulu. com.
+\end{itemize}
+
+\end{frame}
+%-------------------------------------------------------------------------------
+
+\end{document}
