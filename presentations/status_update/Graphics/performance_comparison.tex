@@ -33,7 +33,7 @@ legend pos=north west
 \addlegendimage{mycolor3}
 
 \addplot+[color=black, line width=1.5pt,mark size=1.0pt,mark=none,mark options={fill=black}]
-table[x=matrix_size,y=naive]{./Graphics/data/performance_comparison.txt}; \label{plot:avg_time_per_iter}
+table[x=matrix_size,y=naive]{./Graphics/data/performance_comparison.txt};
 
 \addplot+[color=mycolor3, line width=1.5pt,mark size=1.0pt,mark=none,mark options={fill=mycolor3}]
 table[x=matrix_size,y=openacc]{./Graphics/data/performance_comparison.txt};
