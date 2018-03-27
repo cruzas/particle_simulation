@@ -14,49 +14,45 @@
 
 \documentclass[aspectratio=169]{beamer}
 
+% Packages
 \usetheme{usi}
-\usepackage{multirow}
-\usepackage{hhline}
-\usepackage{tikz}
-\usepackage{graphicx}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage{listings}
 \usepackage{array}
-\usepackage{xcolor}
+\usepackage[backend=biber]{biblatex}
+\usepackage{caption}
 \usepackage{float}
-\usetikzlibrary{shapes.geometric}
+\usepackage{graphicx}
+\usepackage{hhline}
+\usepackage{listings}
+\usepackage{multirow}
+\usepackage{pgfplots}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage{xcolor}
 
-\newcommand\score[2]{
-\pgfmathsetmacro\pgfxa{#1+1}
-\tikzstyle{scorestars}=[star, star points=5, star point ratio=2.25, draw,inner sep=1.3pt,anchor=inner point 3]
-  \begin{tikzpicture}[baseline]
-    \foreach \i in {1,...,#2} {
-    \pgfmathparse{(\i<=#1?"usi@yellow":"gray")}
-    \edef\starcolor{\pgfmathresult}
-    \draw (\i*2.0ex,0) node[name=star\i,scorestars,fill=\starcolor,color=\starcolor]  {};
-   }
-  \end{tikzpicture}
-}
+% Bibliography source.
+\addbibresource{references.bib}
 
-\definecolor{cadmiumgreen}{rgb}{0.0, 0.42, 0.24}
+% Colour definitions
+\definecolor{mycolor3}{RGB}{170,35,3}
 
 \setlength{\fboxsep}{0.25pt}%
 \setlength{\fboxrule}{0pt}%
 
-\title[Particle Simulations with OpenACC]{\textbf{Particle Simulations with OpenACC: Speedup and Scaling}\\[0.5em] Overview of mathematical models, simulation used, and OpenACC}
+\title[Particle Simulations with OpenACC]{\textbf{Particle Simulations with OpenACC: Speedup and Scaling}\\[0.5em] Status Update}
 \author{Samuel A. Cruz Alegr\'{i}a, Alessandra M. de Felice, Hrishikesh R. Gupta}
 \institute{(University of Lugano)}
 \date{\today}
 
 
 \begin{document}
+%-------------------------------------------------------------------------------	
 \begin{frame}
 \titlepage
 \end{frame}
 %-------------------------------------------------------------------------------
+
 %-------------------------------------------------------------------------------
-\begin{frame}[fragile]{Status Update}
+\begin{frame}[fragile]{Tasks so far}
 
 Our tasks for this week were the following:
 %
@@ -71,7 +67,7 @@ Our tasks for this week were the following:
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{frame}[fragile]{Serial Code}
+\begin{frame}[fragile]{Serial code}
 	The serial code is divided into the following three main sections:
 	%
 	\begin{enumerate}
@@ -81,57 +77,121 @@ Our tasks for this week were the following:
 	\end{enumerate}
 	%
 	
-	For the moment, particle movement doesn't strictly abide to any well-established physics. For instance, particle collisions with each other are not calculated yet.
+	For the moment, particle movement doesn't strictly abide to any well-established physics. For instance, particle collisions are not calculated yet.
 \end{frame}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{frame}[fragile]{Serial Code}
+\begin{frame}[fragile]{Serial code}
 	Demo...
 \end{frame}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{frame}[fragile]{Visualization Tools}
+\begin{frame}[fragile]{Visualization tools}
 	%
 	\begin{itemize}
 		\item For the time being, the simulation is done in two dimensions. This makes it relatively straightforward to paint the particles on the canvas.
 		\item In three dimensions, we would need to add behaviour for the third dimension and would need to change the way in which particles are currently being drawn.
-		\item In order to minimize time spent in building code for rendering in more than two dimensions, we can choose to use visualization tools.
+		\item To avoid building code for rendering in more than two dimensions, we could rely on visualization tools.
 	\end{itemize}
 	%
 \end{frame}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-\begin{frame}[fragile]{Visualization Tools}
-	An option for visualization is \emph{ParaView}.
+\begin{frame}[fragile]{Visualization tools}
+	An option for visualization is using \emph{ParaView} \cite{website:paraview_wiki}.
 	%
 	\begin{itemize}
-		\item Used at the CSCS (Swiss National Supercomputing Centre).
+		\item Used at the CSCS (Swiss National Supercomputing Centre) \cite{website:cscs}.
 		\item Open source, used for visualizing two and three-dimensional data sets.
 		\item Platforms supported range from single-processor workstations to multiple-processor distributed-memory supercomputers or workstation clusters.
+		\item Many file formats supported.
 	\end{itemize}
 	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Visualization tools}
+	An example file format is the following:
+	%
+	\begin{table}
+		\centering
+		\begin{tabular}{l l l l}
+			\emph{particle index} & \emph{x-coordinate} & \emph{y-coordinate} & \emph{z-coordinate} \\
+			0 & 3.5 & 6.0 & 50.0\\
+			1 & 1.4 & 3.0 & 10.0\\
+			\vdots & \vdots & \vdots & \vdots\\
+			1000 & 5.5 & 10.5 & 20.2\\
+		\end{tabular}
+	\end{table}
+	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Visualization tools}
+	Using the file format [particle index, x-coordinate, y-coordinate], we need to create a file for each time step. In each file, we'll write the position of each particle in the given time step.
+	%
+	\begin{itemize}
+		\item \texttt{positions\_0.txt}
+		\item \texttt{positions\_1.txt}
+		\item \texttt{positions\_2.txt}
+		\item And so on...
+	\end{itemize}
+	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Visualization tools}
+	Demo...
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Parallelization methods}
+	Preliminary benchmarks made for matrix--matrix multiplication execution time, comparing performance of serial code vs code parallelized using \emph{OpenACC}.
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Parallelization methods}
+	% Performance comparison
+	\begin{figure}[H]
+		\centering
+		\input{./Graphics/performance_comparison.tex}
+		\caption{Matrix--matrix multiplication: execution time comparison.}
+	\end{figure}
+	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Project plan}
+	Show current project calendar...
 \end{frame}
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
 \begin{frame}[fragile]{References}
-
-\begin{itemize}
-\small{\item Farber, R., 2016.Parallel programming with OpenACC. Newnes.
-\item Gonzales, R.,  Martin, M., Mittow, N., and Rasmuss, R.,2016, An Introduction to OpenAcc.ECS 158 Final Project.
-\item Li, X., Shih, P.C., Overbey, J., Seals, C. and Lim, A., 2016. Comparing programmer productivity in OpenACC and CUDA: an empirical investigation.International Journal of Computer Science, Engineering and Applications (IJCSEA),6(5), pp.1-15.
-\item Memeti, S., Li, L., Pllana, S., Kołodziej, J. and Kessler, C., 2017, July. Benchmarking OpenCL, OpenACC, OpenMP, and CUDA: programming productivity, performance, and energy consumption. InProceedings of the 2017 Workshop on Adaptive Resource Management and Scheduling for Cloud Computing(pp. 1-6). ACM.
-\item Urbanic, J., 2013. Introduction to Directive Based Programming.
-\item OpenACC Programming and Best Practices. Guide \url{http://www.openacc.org/sites/default/files/inline-files/OpenACC_Programming_Guide_0.pdf}
-\item \url{http://www.nvidia.com/object/what-is-gpu-computing.html}}
-\item Allen, M.P., 2004. Introduction to molecular dynamics simulation. Computational soft matter: from synthetic polymers to proteins, 23, pp.1-28.
-\item Eijkhout, V., 2014. Introduction to High Performance Scientific Computing. Lulu. com.
-\end{itemize}
-
+	\printbibliography
 \end{frame}
 %-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Questions}
+	%
+	\begin{center}
+		Thank you for your attention!\\
+		\\
+		Any questions?
+	\end{center}
+	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
 
 \end{document}

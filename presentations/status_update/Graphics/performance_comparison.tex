@@ -1,0 +1,44 @@
+%
+\begin{tikzpicture}
+
+% f(x)
+\begin{axis}[
+width=0.4\linewidth,
+at={(0.0in,0.0in)},
+separate axis lines,
+every outer x axis line/.append style={black},
+every x tick label/.append style={font=\footnotesize},
+every outer y axis line/.append style={black},
+every y tick label/.append style={font=\footnotesize},
+xtick pos=left,
+ytick pos=left,
+xticklabel style={font=\footnotesize},
+yticklabel style={font=\footnotesize},
+yminorticks=true,
+xmin=1000,
+xmax=4000,
+ymin=0,
+ymax=400,
+xlabel={Matrix size $n$},
+ylabel={Execution time (seconds)},
+label style={font=\footnotesize},
+axis background/.style={fill=none},
+legend style={at={(0,0)},legend cell align=left,align=left,draw=none,fill=none,font=\footnotesize},
+legend entries={Serial,
+                OpenACC},
+legend pos=north west
+]
+
+\addlegendimage{black}
+\addlegendimage{mycolor3}
+
+\addplot+[color=black, line width=1.5pt,mark size=1.0pt,mark=none,mark options={fill=black}]
+table[x=matrix_size,y=naive]{./Graphics/data/performance_comparison.txt}; \label{plot:avg_time_per_iter}
+
+\addplot+[color=mycolor3, line width=1.5pt,mark size=1.0pt,mark=none,mark options={fill=mycolor3}]
+table[x=matrix_size,y=openacc]{./Graphics/data/performance_comparison.txt};
+\end{axis}
+%
+
+\end{tikzpicture}
+%

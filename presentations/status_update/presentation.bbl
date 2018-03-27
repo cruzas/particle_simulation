@@ -1,0 +1,65 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.8 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \sortlist[entry]{nty/global/}
+    \entry{website:cscs}{misc}{}
+      \name{author}{1}{}{%
+        {{hash=3a511c741b673968d7d3106dde5d8a4f}{%
+           family={CSCS},
+           familyi={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{3a511c741b673968d7d3106dde5d8a4f}
+      \strng{fullhash}{3a511c741b673968d7d3106dde5d8a4f}
+      \strng{authornamehash}{3a511c741b673968d7d3106dde5d8a4f}
+      \strng{authorfullhash}{3a511c741b673968d7d3106dde5d8a4f}
+      \field{sortinit}{C}
+      \field{sortinithash}{095692fd22cc3c74d7fe223d02314dbd}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{ParaView}
+      \verb{url}
+      \verb https://user.cscs.ch/scientific_computing/supported_applications/paraview/
+      \endverb
+    \endentry
+    \entry{website:paraview_wiki}{misc}{}
+      \name{author}{1}{}{%
+        {{hash=3841d4bc815babca4f3656183fec8cdf}{%
+           family={ParaView},
+           familyi={P\bibinitperiod}}}%
+      }
+      \strng{namehash}{3841d4bc815babca4f3656183fec8cdf}
+      \strng{fullhash}{3841d4bc815babca4f3656183fec8cdf}
+      \strng{authornamehash}{3841d4bc815babca4f3656183fec8cdf}
+      \strng{authorfullhash}{3841d4bc815babca4f3656183fec8cdf}
+      \field{sortinit}{P}
+      \field{sortinithash}{24100cef455d7974167575052c29146e}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{11}
+      \field{title}{The ParaView Tutorial}
+      \field{year}{2017}
+      \verb{url}
+      \verb https://www.paraview.org/Wiki/The_ParaView_Tutorial
+      \endverb
+    \endentry
+  \endsortlist
+\endrefsection
+\endinput
+
