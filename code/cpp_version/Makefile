@@ -1,0 +1,28 @@
+# Modified from example file found at the following:
+# https://stackoverflow.com/questions/2481269/how-to-make-a-simple-c-makefile
+CC=gcc
+CXX=g++
+RM=rm -f
+CPPFLAGS=-g $(shell pkg-config --cflags)
+
+SRCS=particles_serial.cpp
+OBJS=$(subst .cpp,.o,$(SRCS))
+
+all: particles_serial
+
+particles_serial: $(OBJS)
+	$(CXX) $(LDFLAGS) -o particles_serial $(OBJS)
+
+depend: .depend
+
+.depend: $(SRCS)
+	$(RM) ./.depend
+	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+
+clean:
+	$(RM) $(OBJS)
+
+distclean: clean
+	$(RM) *~ .depend
+
+include .depend
