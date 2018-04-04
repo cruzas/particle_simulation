@@ -354,7 +354,7 @@ init_params(int argc, char *argv[])
 int
 init_particles()
 {
-  pd = malloc(sizeof(*pd) * n * 4);
+  pd = (float *)malloc(sizeof(*pd) * n * 4);
   if (!pd) {
     fprintf(stderr, "Could not allocate space for particle details.\n");
     return 0;
