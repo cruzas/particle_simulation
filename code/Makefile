@@ -6,7 +6,7 @@ GTK_LIBS=$(shell pkg-config --libs $(GTK_PACKAGES))
 # -L/usr/local/Cellar/gtk+/2.24.32_2/lib -lgtk-quartz-2.0.0 -lgdk-quartz-2.0.0
 
 
-CFLAGS=-g -Wall -O2 -std=c99 -framework OpenCL $(GTK_CFLAGS)
+CFLAGS=-g -fsanitize=address -Wall -O2 -std=c99 -framework OpenCL $(GTK_CFLAGS)
 LIBS=$(GTK_LIBS)
 
 PROGS=particles_parallel particles_serial
@@ -20,8 +20,8 @@ all: $(PROGS)
 particles_parallel: particles_parallel.o opencl_util.o
 	$(CC) $(CFLAGS) $(LDFLAGS) particles_parallel.o opencl_util.o $(LIBS) -o $@
 
-particles_serial: particles_serial.o opencl_util.o
-	$(CC) $(CFLAGS) $(LDFLAGS) particles_serial.o opencl_util.o $(LIBS) -o $@
+particles_serial: particles_serial.o
+	$(CC) $(CFLAGS) $(LDFLAGS) particles_serial.o $(LIBS) -o $@
 
 .PHONY: clean
 clean:

@@ -97,21 +97,28 @@ main(int argc, char *argv[])
   #endif
 
   // animate the particles
-  animate_particles();
-
-  return 0;
+  return animate_particles();
 }
 
 /* Animate the particles. */
-void
+int
 animate_particles() {
   // initial window width
   int width = DEFAULT_WIDTH;
   // initial window height
   int height = DEFAULT_HEIGHT;
 
+  #ifdef DEBUGGING
+    printf("width=%d, height=%d\n", width, height);
+  #endif
+
   // create new pixel buffer
   pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, width, height);
+  if (!pixbuf) {
+    fprintf(stderr, "Could not allocate space for image buffer.\n");
+    return -1;
+  }
+
   gtk_init(0, 0);
 
   // create new window
@@ -139,6 +146,8 @@ animate_particles() {
   g_timeout_add(delta/1000, timeout, window);
   // gtk_main() runs the main loop until gtk_main_quit() is called
   gtk_main();
+
+  return 0;
 }
 
 /* Function called at each delta/1000 milliseconds time interval.
@@ -152,9 +161,9 @@ timeout(void * user_data)
   #endif
 
   // status is 1 on success, 0 on error
-  int status = trace_particles(user_data);
-  status |= draw_particles(user_data);
-  return (status |= update_particles(user_data));
+  // int status = trace_particles(user_data);
+  // status |= draw_particles(user_data);
+  return update_particles(user_data);
 }
 
 /*

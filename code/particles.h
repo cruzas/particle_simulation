@@ -5,7 +5,7 @@
 #ifndef PARTICLES_H_INCLUDED
 #define PARTICLES_H_INCLUDED
 
-extern void animate_particles();
+extern int animate_particles();
 extern int init_params(int argc, char *argv[]);
 extern int init_particles();
 extern void print_pd_all();

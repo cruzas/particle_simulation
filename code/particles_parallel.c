@@ -119,7 +119,7 @@ main(int argc, char *argv[])
   #endif
 
   // animate the particles
-  animate_particles();
+  int status = animate_particles();
 
   // release OpenCL memory objects
   if (kernel_pixels)
@@ -138,11 +138,11 @@ main(int argc, char *argv[])
   clReleaseCommandQueue(queue);
   // free particle details
   free(pd);
-  return 0;
+  return status;
 }
 
 /* Animate the particles. */
-void
+int
 animate_particles() {
   // initial window width
   int width = DEFAULT_WIDTH;
@@ -151,6 +151,11 @@ animate_particles() {
 
   // create new pixel buffer
   pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, width, height);
+  if (!pixbuf) {
+    fprintf(stderr, "Could not allocate space for image buffer.\n");
+    return -1;
+  }
+
   gtk_init(0, 0);
 
   // create new window
@@ -178,6 +183,8 @@ animate_particles() {
   g_timeout_add(delta/1000, timeout, window);
   // gtk_main() runs the main loop until gtk_main_quit() is called
   gtk_main();
+
+  return 0;
 }
 
 /* Function called at each delta/1000 milliseconds time interval.
@@ -192,7 +199,7 @@ timeout(void * user_data)
 
   // status is 1 on success, 0 on error
   int status = trace_particles(user_data);
-  status |= draw_particles(user_data);
+  // status |= draw_particles(user_data);
   return (status |= update_particles(user_data));
 }
 
