@@ -25,7 +25,7 @@ static float *pd;         // Particle details array.
 void
 print_usage()
 {
-  fprintf(stderr, "Usage: [n=num_particles] [fx=forcefield_x] [fy=forcefield_y] [trace=shading_factor_trace] [radius=particle_radius] [delta=inter_frame_interval_in_seconds]\n");
+  fprintf(stderr, "Usage: [width=box_width] [height=box_height] [n=num_particles] [fx=forcefield_x] [fy=forcefield_y] [trace=shading_factor_trace] [radius=particle_radius] [delta=inter_frame_interval_in_seconds] [time_frame=total_time_in_seconds]\n");
 }
 
 /* Print the details of all particles. */
@@ -43,11 +43,6 @@ print_all_particle_details()
 int
 main(int argc, char *argv[])
 {
-  #ifdef DEBUGGING
-  cout << "Width=" << DEFAULT_WIDTH << "\n";
-  cout << "Height=" << DEFAULT_WIDTH << "\n";
-  #endif
-
   // Do all necessary initializations.
   if (!init_params(argc, argv) || !init_particles()) {
     return -1;
@@ -61,7 +56,7 @@ main(int argc, char *argv[])
   #endif
   for (int cycle = 0; cycle < nCycles; ++cycle) {
     update_particles();
-    print_all_particle_details();
+    // print_all_particle_details();
   }
 }
 
@@ -217,7 +212,13 @@ init_params(int argc, char *argv[])
 int
 process_arg(char *arg)
 {
-  if (strstr(arg, "n="))
+  if (strstr(arg, "width="))
+  return sscanf(arg, "width=%d", &width) == 1;
+
+  if (strstr(arg, "height="))
+  return sscanf(arg, "height=%d", &height) == 1;
+
+  else if (strstr(arg, "n="))
   return sscanf(arg, "n=%d", &n) == 1;
 
   else if (strstr(arg, "fx="))
@@ -231,6 +232,9 @@ process_arg(char *arg)
 
   else if (strstr(arg, "delta="))
   return sscanf(arg, "delta=%f", &delta) == 1;
+
+  else if (strstr(arg, "time_frame="))
+  return sscanf(arg, "time_frame=%d", &time_frame) == 1;
 
   // Return 0 if the given command-line parameter was invalid.
   return 0;
