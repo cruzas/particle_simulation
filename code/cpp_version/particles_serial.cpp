@@ -178,6 +178,7 @@ print_all_particle_details()
 }
 
 /* Write the details of all particles to file with given filename.
+* The path PDPATH is used to specify where to save the file.
 * @return 1 on success, 0 on failure.*/
 int
 write_all_particle_details_to_file(string filename)
