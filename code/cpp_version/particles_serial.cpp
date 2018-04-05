@@ -7,7 +7,7 @@ using namespace std;
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 800
 #define DEBUGGING 1
-// #undef DEBUGGING
+#undef DEBUGGING
 
 static const string PDPATH = "./particle_positions/";  // Path to write files to.
 static int width;         // Width of box containing particles.
@@ -183,7 +183,6 @@ print_all_particle_details()
 int
 write_all_particle_details_to_file(string filename)
 {
-  cout << PDPATH + filename << "\n";
   ofstream myfile;
   myfile.open(PDPATH + filename, ios::out);
 
