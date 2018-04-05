@@ -1,4 +1,4 @@
-# Modified from example file found at the following:
+# Modified from example found at the following link:
 # https://stackoverflow.com/questions/2481269/how-to-make-a-simple-c-makefile
 CC=gcc
 CXX=g++

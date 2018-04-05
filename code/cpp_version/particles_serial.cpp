@@ -1,5 +1,14 @@
-#include <iostream>
+/**
+* Authors: Samuel A. Cruz Alegría, Alessandra M. de Felice, Hrishikesh R. Gupta.
+*
+* This program simulates particle movement in 2D space.
+*/
+
+#include <ctime>
 #include <fstream>
+#include <iostream>
+#include <cstdlib>
+
 #include "particles.h"
 
 using namespace std;
@@ -85,6 +94,9 @@ init_particles()
     fprintf(stderr, "Could not allocate space for particle details.\n");
     return 0;
   }
+
+  // Set new seed for rand.
+  srand(time(0));
 
   // Go through all particles and initialize their details at random.
   for (int id = 0; id < n; ++id) {
