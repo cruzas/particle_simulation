@@ -68,6 +68,7 @@ main(int argc, char *argv[])
     }
   }
 
+  free(pd);
   return 0;
 }
 
