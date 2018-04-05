@@ -5,7 +5,6 @@
 extern int update_particles();
 extern int init_params(int argc, char *argv[]);
 extern int init_particles();
-extern void print_pd_all();
 extern int process_arg(char *arg);
 
 

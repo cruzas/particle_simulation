@@ -51,8 +51,8 @@ main(int argc, char *argv[])
     return -1;
   }
 
-  // Calculate number of loop cycles to be performed given a time interval and
-  // time per frame.
+  // Calculate number of loop cycles to be performed given a total time interval
+  // and time per frame.
   int nCycles = total_time_interval / delta;
   #ifdef DEBUGGING
   printf("nCycles=%d\n", nCycles);
@@ -228,7 +228,7 @@ init_params(int argc, char *argv[])
   // Read and process command-line arguments.
   for (int i = 1; i < argc; ++i) {
     if(!process_arg(argv[i])) {
-      fprintf(stderr, "Invalid argument: %s\n", argv[i]);
+      cerr << "Invalid argument: " << argv[i] << "\n";
       print_usage();
       return 0;
     }

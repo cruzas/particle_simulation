@@ -3,7 +3,8 @@
 CC=gcc
 CXX=g++
 RM=rm -f
-CPPFLAGS=-g $(shell pkg-config --cflags)
+CPPFLAGS=-g -fsanitize=address $(shell pkg-config --cflags)
+LDFLAGS= -fsanitize=address
 
 SRCS=particles_serial.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
