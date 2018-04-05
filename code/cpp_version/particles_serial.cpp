@@ -17,7 +17,7 @@ static float fx;          // Horizontal component of the force field.
 static float fy;          // Vertical component of the force field.
 static float radius;      // Radius of the particles, in pixels.
 static float delta;       // Time, in seconds, for inter-frame interval.
-static int time_frame;    // Time, in seconds, for total time interval.
+static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
 static float *pd;         // Particle details array.
 
@@ -30,7 +30,15 @@ int write_all_particle_details_to_file(string filename);
 void
 print_usage()
 {
-  cerr << "Usage: [width=box_width] [height=box_height] [n=num_particles] [fx=forcefield_x] [fy=forcefield_y] [trace=shading_factor_trace] [radius=particle_radius] [delta=inter_frame_interval_in_seconds] [time_frame=total_time_in_seconds]\n";
+  cerr << "Usage: [width=box_width] "
+       << "[height=box_height] "
+       << "[n=num_particles] "
+       << "[fx=forcefield_x] "
+       << "[fy=forcefield_y] "
+       << "[trace=shading_factor_trace] "
+       << "[radius=particle_radius] "
+       << "[delta=inter_frame_interval_in_seconds] "
+       << "[total_time_interval=total_time_in_seconds]\n";
 }
 
 
@@ -45,7 +53,7 @@ main(int argc, char *argv[])
 
   // Calculate number of loop cycles to be performed given a time interval and
   // time per frame.
-  int nCycles = time_frame / delta;
+  int nCycles = total_time_interval / delta;
   #ifdef DEBUGGING
   printf("nCycles=%d\n", nCycles);
   #endif
@@ -184,8 +192,8 @@ int
 write_all_particle_details_to_file(string filename)
 {
   ofstream myfile;
-  myfile.open(PDPATH + filename, ios::out);
 
+  myfile.open(PDPATH + filename, ios::out);
   if (myfile.is_open()) {
     for (int i = 0; i < n; ++i) {
       myfile << i << "\t" << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
@@ -213,7 +221,7 @@ init_params(int argc, char *argv[])
   fy = 50;                  // Vertical component of the force field.
   radius = 5;               // Radius of the particles, in pixels.
   delta = 1.0;              // Time, in seconds, for inter-frame interval.
-  time_frame = 10;          // Time, in seconds, for total time interval.
+  total_time_interval = 10;          // Time, in seconds, for total time interval.
   g = -9.8;                 // Gravitational factor (in y direction).
 
   // Read and process command-line arguments.
@@ -233,7 +241,7 @@ init_params(int argc, char *argv[])
   printf("fy=%f\n", fy);
   printf("radius=%f\n", radius);
   printf("delta=%f\n", delta);
-  printf("time_frame=%d\n", time_frame);
+  printf("total_time_interval=%d\n", total_time_interval);
   printf("g: %f\n", g);
   #endif
 
@@ -269,8 +277,8 @@ process_arg(char *arg)
   else if (strstr(arg, "delta="))
   return sscanf(arg, "delta=%f", &delta) == 1;
 
-  else if (strstr(arg, "time_frame="))
-  return sscanf(arg, "time_frame=%d", &time_frame) == 1;
+  else if (strstr(arg, "total_time_interval="))
+  return sscanf(arg, "total_time_interval=%d", &total_time_interval) == 1;
 
   // Return 0 if the given command-line parameter was invalid.
   return 0;
