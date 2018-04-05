@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include "particles.h"
 
 using namespace std;
@@ -8,6 +9,7 @@ using namespace std;
 #define DEBUGGING 1
 // #undef DEBUGGING
 
+static const string PDPATH = "./particle_positions/";  // Path to write files to.
 static int width;         // Width of box containing particles.
 static int height;        // Height of box containing particles.
 static int n;             // Number of particles.
@@ -19,23 +21,16 @@ static int time_frame;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
 static float *pd;         // Particle details array.
 
+void print_all_particle_details();
+int write_all_particle_details_to_file(string filename);
+
 /*
 * Print expected usage of this program.
 */
 void
 print_usage()
 {
-  fprintf(stderr, "Usage: [width=box_width] [height=box_height] [n=num_particles] [fx=forcefield_x] [fy=forcefield_y] [trace=shading_factor_trace] [radius=particle_radius] [delta=inter_frame_interval_in_seconds] [time_frame=total_time_in_seconds]\n");
-}
-
-/* Print the details of all particles. */
-void
-print_all_particle_details()
-{
-  for (int i = 0; i < n; ++i) {
-    printf("particles[%d]. px=%f, py=%f, vx=%f, vy=%f\n",
-            i, pd[i*4], pd[i*4 + 1], pd[i*4 + 2], pd[i*4 + 3]);
-  }
+  cerr << "Usage: [width=box_width] [height=box_height] [n=num_particles] [fx=forcefield_x] [fy=forcefield_y] [trace=shading_factor_trace] [radius=particle_radius] [delta=inter_frame_interval_in_seconds] [time_frame=total_time_in_seconds]\n";
 }
 
 
@@ -55,9 +50,17 @@ main(int argc, char *argv[])
   printf("nCycles=%d\n", nCycles);
   #endif
   for (int cycle = 0; cycle < nCycles; ++cycle) {
+    float current_time_frame = delta * cycle;
+
+    string filename ("positions_" + to_string(current_time_frame) + ".txt");
+
     update_particles();
-    // print_all_particle_details();
+    if (!write_all_particle_details_to_file(filename)) {
+      cerr << "Could not write file: " << filename << "\n";
+    }
   }
+
+  return 0;
 }
 
 /*
@@ -159,6 +162,39 @@ update_particles()
     } else if (pd[py_i] + radius >= height) {
       pd[py_i] = height - radius;
     }
+  }
+
+  return 1;
+}
+
+/* Print the details of all particles.*/
+void
+print_all_particle_details()
+{
+  for (int i = 0; i < n; ++i) {
+    printf("particles[%d]: px=%f, py=%f, vx=%f, vy=%f\n",
+            i, pd[i*4], pd[i*4 + 1], pd[i*4 + 2], pd[i*4 + 3]);
+  }
+}
+
+/* Write the details of all particles to file with given filename.
+* @return 1 on success, 0 on failure.*/
+int
+write_all_particle_details_to_file(string filename)
+{
+  cout << PDPATH + filename << "\n";
+  ofstream myfile;
+  myfile.open(PDPATH + filename, ios::out);
+
+  if (myfile.is_open()) {
+    for (int i = 0; i < n; ++i) {
+      myfile << i << "\t" << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
+    }
+
+    myfile.close();
+  } else {
+    cerr << "Unable to open file: " << filename << "\n";
+    return 0;
   }
 
   return 1;
