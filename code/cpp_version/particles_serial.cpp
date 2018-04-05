@@ -95,7 +95,16 @@ init_particles()
     return 0;
   }
 
-  // Set new seed for rand.
+  /* The srand() function sets its argument seed as the seed for a new
+   * sequence of pseudo-random numbers to be returned by rand().  These
+   * sequences are repeatable by calling srand() with the same seed value.
+   *
+   *
+   * time(0) explanation from: https://stackoverflow.com/questions/4736485/srandtime0-and-random-number-generation
+   * time(0) gives the time in seconds since the Unix epoch, which is a
+   * pretty good "unpredictable" seed (you're guaranteed your seed will be the
+   * same only once, unless you start your program multiple times within the
+   * same second).*/
   srand(time(0));
 
   // Go through all particles and initialize their details at random.
