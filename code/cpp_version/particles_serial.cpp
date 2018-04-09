@@ -63,13 +63,13 @@ main(int argc, char *argv[])
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
   int nCycles = total_time_interval / delta;
-  #ifdef DEBUGGING
-  printf("nCycles=%d\n", nCycles);
-  #endif
   for (int cycle = 0; cycle < nCycles; ++cycle) {
     float current_time_frame = delta * cycle;
 
-    string filename ("positions_" + to_string(current_time_frame) + ".txt");
+    string current_time_frame_string = to_string(current_time_frame);
+    current_time_frame_string.erase(remove(current_time_frame_string.begin(), current_time_frame_string.end(), '.'), current_time_frame_string.end());
+
+    string filename ("positions_" + current_time_frame_string + ".txt");
 
     update_particles();
     if (!write_all_particle_details_to_file(filename)) {
@@ -218,7 +218,8 @@ write_all_particle_details_to_file(string filename)
   myfile.open(PDPATH + filename, ios::out);
   if (myfile.is_open()) {
     for (int i = 0; i < n; ++i) {
-      myfile << i << "\t" << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
+      // myfile << i << "\t" << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
+      myfile << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
     }
 
     myfile.close();
