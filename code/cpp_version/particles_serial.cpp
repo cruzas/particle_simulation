@@ -218,8 +218,8 @@ write_all_particle_details_to_file(string filename)
   myfile.open(PDPATH + filename, ios::out);
   if (myfile.is_open()) {
     for (int i = 0; i < n; ++i) {
-      // myfile << i << "\t" << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
-      myfile << pd[i*4] << "\t" << pd[i*4 + 1] << "\n";
+      myfile << i << "," << pd[i*4] << "," << pd[i*4 + 1] << "\n";
+      // myfile << pd[i*4] << "," << pd[i*4 + 1] << "\n";
     }
 
     myfile.close();
