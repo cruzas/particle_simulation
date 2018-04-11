@@ -161,8 +161,8 @@ timeout(void * user_data)
   #endif
 
   // status is 1 on success, 0 on error
-  // int status = trace_particles(user_data);
-  // status |= draw_particles(user_data);
+  int status = trace_particles(user_data);
+  status |= draw_particles(user_data);
   return update_particles(user_data);
 }
 

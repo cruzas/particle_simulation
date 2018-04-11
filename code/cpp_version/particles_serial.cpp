@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <stdio.h>
 
 #include "particles.h"
 
@@ -69,7 +70,7 @@ main(int argc, char *argv[])
     string current_time_frame_string = to_string(current_time_frame);
     current_time_frame_string.erase(remove(current_time_frame_string.begin(), current_time_frame_string.end(), '.'), current_time_frame_string.end());
 
-    string filename ("positions_" + current_time_frame_string + ".txt");
+    string filename ("positions_" + current_time_frame_string + ".vtk");
 
     update_particles();
     if (!write_all_particle_details_to_file(filename)) {
@@ -217,9 +218,17 @@ write_all_particle_details_to_file(string filename)
 
   myfile.open(PDPATH + filename, ios::out);
   if (myfile.is_open()) {
+
+    myfile << "# vtk DataFile Version 1.0\n";
+    myfile << "3D triangulation data\n";
+    myfile << "ASCII\n\n";
+
+    myfile << "DATASET POLYDATA\n";
+    myfile << "POINTS " << n << " float\n";
+
     for (int i = 0; i < n; ++i) {
-      myfile << i << "," << pd[i*4] << "," << pd[i*4 + 1] << "\n";
-      // myfile << pd[i*4] << "," << pd[i*4 + 1] << "\n";
+      // myfile << i << " " << pd[i*4] << " " << pd[i*4 + 1] << "\n";
+      myfile << pd[i*4] << " " << pd[i*4 + 1] << " " << 0 << "\n";
     }
 
     myfile.close();
