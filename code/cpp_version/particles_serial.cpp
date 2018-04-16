@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
+#include <vector>
 
 #include "particles.h"
 
@@ -29,7 +30,10 @@ static float radius;      // Radius of the particles, in pixels.
 static float delta;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
-static float *pd;         // Particle details array.
+vector<float> pxvec;      // Vector of particle x positions.
+vector<float> pyvec;      // Vector of particle y positions.
+vector<float> vxvec;      // Vector of particle velocity x components.
+vector<float> vyvec;      // Vectory of particle velocity y components.
 
 void print_all_particle_details();
 int write_all_particle_details_to_file(string filename);
@@ -78,7 +82,6 @@ main(int argc, char *argv[])
     }
   }
 
-  free(pd);
   return 0;
 }
 
@@ -90,11 +93,10 @@ int
 init_particles()
 {
   // Allocate space for particle details.
-  pd = (float *)malloc(sizeof(*pd) * n * 4);
-  if (!pd) {
-    fprintf(stderr, "Could not allocate space for particle details.\n");
-    return 0;
-  }
+  pxvec.reserve(n);
+  pyvec.reserve(n);
+  vxvec.reserve(n);
+  vyvec.reserve(n);
 
   /* The srand() function sets its argument seed as the seed for a new
    * sequence of pseudo-random numbers to be returned by rand().  These
@@ -110,36 +112,29 @@ init_particles()
 
   // Go through all particles and initialize their details at random.
   for (int id = 0; id < n; ++id) {
-    int px_i = id*4;      // x-position index.
-    int py_i = id*4 + 1;  // y-position index.
-    int vx_i = id*4 + 2;  // vx-component index.
-    int vy_i = id*4 + 3;  // vy-component index.
-
-    pd[px_i] = (double) (rand() % DEFAULT_WIDTH);   // Set x position.
-    pd[py_i] = (double) (rand() % DEFAULT_HEIGHT);  // Set y position.
-    pd[vx_i] = rand() / (float) RAND_MAX * fx;      // Set vx component.
-    pd[vy_i] = rand() / (float) RAND_MAX * fy;      // Set vy component.
+    // Set x position.
+    pxvec.push_back((float) (rand() % DEFAULT_WIDTH));
+    // Set y position.
+    pyvec.push_back((float) (rand() % DEFAULT_HEIGHT));
+    // Set velocity x-component.
+    vxvec.push_back(rand() / (float) RAND_MAX * fx);
+    // Set velocity y-component.
+    vyvec.push_back(rand() / (float) RAND_MAX * fy);
 
     // Correct starting x position.
-    if (pd[px_i] - radius <= 0) {
-      pd[px_i] = radius;
-    } else if (pd[px_i] + radius >= DEFAULT_WIDTH) {
-      pd[px_i] = DEFAULT_WIDTH - radius;
+    if (pxvec[id] - radius <= 0) {
+      pxvec[id] = radius;
+    } else if (pxvec[id] + radius >= DEFAULT_WIDTH) {
+      pxvec[id] = DEFAULT_WIDTH - radius;
     }
 
     // Correct starting y position.
-    if (pd[py_i] - radius <= 0) {
-      pd[py_i] = radius;
-    } else if (pd[py_i] + radius >= DEFAULT_HEIGHT) {
-      pd[py_i] = DEFAULT_HEIGHT - radius;
+    if (pyvec[id] - radius <= 0) {
+      pyvec[id] = radius;
+    } else if (pyvec[id] + radius >= DEFAULT_HEIGHT) {
+      pyvec[id] = DEFAULT_HEIGHT - radius;
     }
   }
-
-  #ifdef DEBUGGING
-  // Set position of first particle at bottom left corner.
-  pd[0] = radius;
-  pd[1] = DEFAULT_HEIGHT - radius;
-  #endif
 
   return 1;
 }
@@ -153,15 +148,10 @@ update_particles()
 {
   // Loop through all particles
   for (int id = 0; id < n; ++id) {
-    int px_i = id*4;      // x-position index.
-    int py_i = id*4 + 1;  // y-position index.
-    int vx_i = id*4 + 2;  // vx-component index.
-    int vy_i = id*4 + 3;  // vy-component index.
-
-    float px = pd[px_i];  // x position.
-    float py = pd[py_i];  // y position.
-    float vx = pd[vx_i];  // vx component.
-    float vy = pd[vy_i];  // vy component.
+    float px = pxvec[id];  // x position.
+    float py = pyvec[id];  // y position.
+    float vx = vxvec[id];  // velocity x-component.
+    float vy = vyvec[id];  // velocity y-component.
 
     // Set new x direction based on horizontal collision with wall.
     if (px + radius >= width || px - radius <= 0) {
@@ -174,24 +164,25 @@ update_particles()
     }
 
     // Update x and y positions.
-    pd[px_i] = px + (vx*delta);
-    pd[py_i] = py - (vy*delta) - (0.5 * g * delta * delta);
+    pxvec[id] = px + (vx*delta);
+    pyvec[id] = py - (vy*delta) - (0.5 * g * delta * delta);
+
     // Update vx and vy components.
-    pd[vx_i] = vx;  // vx only as acceleration in x-direction is 0.
-    pd[vy_i] = vy + 0.5*(g)*delta;
+    vxvec[id] = vx;  // vx only as acceleration in x-direction is 0.
+    vyvec[id] = vy + 0.5*(g)*delta;
 
     // Correct x position in case updated position goes past wall.
-    if (pd[px_i] - radius <= 0) {
-      pd[px_i] = radius;
-    } else if (pd[px_i] + radius >= height) {
-      pd[px_i] = width - radius;
+    if (pxvec[id] - radius <= 0) {
+      pxvec[id] = radius;
+    } else if (pxvec[id] + radius >= height) {
+      pxvec[id] = width - radius;
     }
 
     // Correct y position in case updated position goes past wall.
-    if (pd[py_i] - radius <= 0) {
-      pd[py_i] = radius;
-    } else if (pd[py_i] + radius >= height) {
-      pd[py_i] = height - radius;
+    if (pyvec[id] - radius <= 0) {
+      pyvec[id] = radius;
+    } else if (pyvec[id] + radius >= height) {
+      pyvec[id] = height - radius;
     }
   }
 
@@ -204,7 +195,7 @@ print_all_particle_details()
 {
   for (int i = 0; i < n; ++i) {
     printf("particles[%d]: px=%f, py=%f, vx=%f, vy=%f\n",
-            i, pd[i*4], pd[i*4 + 1], pd[i*4 + 2], pd[i*4 + 3]);
+            i, pxvec[i], pyvec[i], vxvec[i], vyvec[i]);
   }
 }
 
@@ -227,8 +218,8 @@ write_all_particle_details_to_file(string filename)
     myfile << "POINTS " << n << " float\n";
 
     for (int i = 0; i < n; ++i) {
-      // myfile << i << " " << pd[i*4] << " " << pd[i*4 + 1] << "\n";
-      myfile << pd[i*4] << " " << pd[i*4 + 1] << " " << 0 << "\n";
+      // Write particle i's position to file.
+      myfile << pxvec[i] << " " << pyvec[i] << " " << 0 << "\n";
     }
 
     myfile.close();
@@ -253,7 +244,7 @@ init_params(int argc, char *argv[])
   fy = 50;                  // Vertical component of the force field.
   radius = 5;               // Radius of the particles, in pixels.
   delta = 1.0;              // Time, in seconds, for inter-frame interval.
-  total_time_interval = 10;          // Time, in seconds, for total time interval.
+  total_time_interval = 10; // Time, in seconds, for total time interval.
   g = -9.8;                 // Gravitational factor (in y direction).
 
   // Read and process command-line arguments.
