@@ -10,6 +10,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
+#include <string>
 #include <string.h>
 #include <vector>
 
@@ -87,15 +88,20 @@ main(int argc, char *argv[])
   for (int cycle = 0; cycle < nCycles; ++cycle) {
     float current_time_frame = delta * cycle;
 
-    string current_time_frame_string = to_string(current_time_frame);
+    string cur_timeframe_str = to_string(current_time_frame);
 
     // Replace '.' in number.
     string::size_type start = 0;
     string dot = ".";
-    start = current_time_frame_string.find(dot, start);
-    current_time_frame_string[start] = '_';
+    start = cur_timeframe_str.find(dot, start);
 
-    string filename ("positions_" + current_time_frame_string + ".vtk");
+    char * cstr = new char [cur_timeframe_str.length()+1];
+    std::strcpy (cstr, cur_timeframe_str.c_str());
+
+    memmove(&cstr[start], &cstr[start + 1], strlen(cstr) - start);
+    string actual_string(cstr);
+
+    string filename ("positions_" + actual_string + ".vtk");
 
     // Call function to update particle details and time it.
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
