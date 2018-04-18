@@ -81,16 +81,10 @@ main(int argc, char *argv[])
 
     string current_time_frame_string = to_string(current_time_frame);
 
-    char * cstr = new char [current_time_frame_string.length()+1];
-    // cstr = strcpy (cstr, str.c_str());
-
-    // current_time_frame_string.erase(remove(&cstr[0], &cstr[current_time_frame_string.length() - 1], '.'), current_time_frame_string.end());
-    // current_time_frame_string.erase(remove(current_time_frame_string.begin(), current_time_frame_string.end(), '.'), current_time_frame_string.end());
-
+    // Replace '.' in number.
     string::size_type start = 0;
     string dot = ".";
     start = current_time_frame_string.find(dot, start);
-    cout << "start=" << start << "\n";
     current_time_frame_string[start] = '_';
 
     string filename ("positions_" + current_time_frame_string + ".vtk");
