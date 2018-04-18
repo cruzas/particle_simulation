@@ -4,13 +4,14 @@
 * This program simulates particle movement in 2D space.
 */
 
+#include <algorithm>
 #include <ctime>
+#include <cstring>
 #include <chrono>
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <stdio.h>
-#include <string>
 #include <string.h>
 #include <vector>
 
@@ -91,6 +92,7 @@ main(int argc, char *argv[])
     string cur_timeframe_str = to_string(current_time_frame);
 
     // Replace '.' in number.
+    // cur_timeframe_str.erase(std::remove(cur_timeframe_str.begin(), cur_timeframe_str.end(), '.'), cur_timeframe_str.end());
     string::size_type start = 0;
     string dot = ".";
     start = cur_timeframe_str.find(dot, start);
@@ -102,6 +104,7 @@ main(int argc, char *argv[])
     string actual_string(cstr);
 
     string filename ("positions_" + actual_string + ".vtk");
+    // string filename ("positions_" + cur_timeframe_str + ".vtk");
 
     // Call function to update particle details and time it.
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
