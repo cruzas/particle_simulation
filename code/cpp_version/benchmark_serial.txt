@@ -1,25 +1,5 @@
-avg_duration=472
-nParticles=10
-avg_duration=0
-nParticles=100
-avg_duration=4
-nParticles=1000
-avg_duration=40
-nParticles=10000
-avg_duration=466
-nParticles=10
-avg_duration=0
-nParticles=100
-avg_duration=4
-nParticles=1000
-avg_duration=39
-nParticles=10000
-avg_duration=470
-nParticles=10
-avg_duration=0
-nParticles=100
-avg_duration=4
-nParticles=1000
-avg_duration=48
-nParticles=10000
-avg_duration=432
+num_particles , time_ns
+10 , 968
+100 , 6504
+1000 , 67058
+10000 , 459200

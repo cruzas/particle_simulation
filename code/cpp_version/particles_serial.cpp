@@ -96,11 +96,12 @@ main(int argc, char *argv[])
 
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
-    auto duration = duration_cast<microseconds>( t2 - t1 ).count();
+    auto duration = duration_cast<nanoseconds>( t2 - t1 ).count();
     avg_duration += duration;
 
     if (!write_all_particle_details_to_file(filename)) {
       cerr << "Could not write file: " << filename << "\n";
+      return -1;
     }
   }
 
