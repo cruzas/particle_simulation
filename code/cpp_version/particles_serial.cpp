@@ -20,6 +20,7 @@ using namespace std::chrono; // For timing.
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 800
+#define DEFAULT_DEPTH 800
 
 #define DEBUGGING 1
 #undef DEBUGGING
@@ -28,17 +29,23 @@ static const string PDPATH = "./particle_positions/";  // Path to write files to
 static int use_openacc;     // Whether we use OpenACC or not.
 static int width;         // Width of box containing particles.
 static int height;        // Height of box containing particles.
+static int depth;         // Depth of box containing particles.
 static int n;             // Number of particles.
 static float fx;          // Horizontal component of the force field.
 static float fy;          // Vertical component of the force field.
+static float fz;          // Depth component of the force field.
 static float radius;      // Radius of the particles, in pixels.
 static float delta;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
+
 vector<float> pxvec;      // Vector of particle x positions.
 vector<float> pyvec;      // Vector of particle y positions.
+vector<float> pzvec;      // Vector of particle z positions.
+
 vector<float> vxvec;      // Vector of particle velocity x components.
 vector<float> vyvec;      // Vectory of particle velocity y components.
+vector<float> vzvec;      // Vector of particle velocity z components.
 
 void print_all_particle_details();
 int write_all_particle_details_to_file(string filename);
@@ -55,6 +62,7 @@ print_usage()
        << "[n=num_particles] "
        << "[fx=forcefield_x] "
        << "[fy=forcefield_y] "
+       << "[fz=forcefield_z]"
        << "[trace=shading_factor_trace] "
        << "[radius=particle_radius] "
        << "[delta=inter_frame_interval_in_seconds] "
@@ -85,7 +93,8 @@ main(int argc, char *argv[])
     string::size_type start = 0;
     string dot = ".";
     start = current_time_frame_string.find(dot, start);
-    current_time_frame_string[start] = '_';
+    // current_time_frame_string[start] = '_';
+    current_time_frame_string.erase(start, 1);
 
     string filename ("positions_" + current_time_frame_string + ".vtk");
 
@@ -119,11 +128,14 @@ main(int argc, char *argv[])
 int
 init_particles()
 {
-  // Allocate space for particle details.
+  // Allocate space for particle positions.
   pxvec.reserve(n);
   pyvec.reserve(n);
+  pzvec.reserve(n);
+  // Allocate space for particle velocities.
   vxvec.reserve(n);
   vyvec.reserve(n);
+  vzvec.reserve(n);
 
   /* The srand() function sets its argument seed as the seed for a new
    * sequence of pseudo-random numbers to be returned by rand().  These
@@ -143,10 +155,14 @@ init_particles()
     pxvec.push_back((float) (rand() % DEFAULT_WIDTH));
     // Set y position.
     pyvec.push_back((float) (rand() % DEFAULT_HEIGHT));
+    // Set z position.
+    pzvec.push_back((float) (rand() % DEFAULT_DEPTH));
     // Set velocity x-component.
     vxvec.push_back(rand() / (float) RAND_MAX * fx);
     // Set velocity y-component.
     vyvec.push_back(rand() / (float) RAND_MAX * fy);
+    // Set velocity z-component.
+    vzvec.push_back(rand() / (float) RAND_MAX * fz);
 
     // Correct starting x position.
     if (pxvec[id] - radius <= 0) {
@@ -160,6 +176,13 @@ init_particles()
       pyvec[id] = radius;
     } else if (pyvec[id] + radius >= DEFAULT_HEIGHT) {
       pyvec[id] = DEFAULT_HEIGHT - radius;
+    }
+
+    // Correct starting z position.
+    if (pzvec[id] - radius <= 0) {
+      pzvec[id] = radius;
+    } else if (pzvec[id] + radius >= DEFAULT_DEPTH) {
+      pzvec[id] = DEFAULT_DEPTH - radius;
     }
   }
 
@@ -177,8 +200,10 @@ update_particles()
   for (int id = 0; id < n; ++id) {
     float px = pxvec[id];  // x position.
     float py = pyvec[id];  // y position.
+    float pz = pzvec[id];  // z position.
     float vx = vxvec[id];  // velocity x-component.
     float vy = vyvec[id];  // velocity y-component.
+    float vz = vzvec[id];  // velocity z-component.
 
     // Set new x direction based on horizontal collision with wall.
     if (px + radius >= width || px - radius <= 0) {
@@ -190,13 +215,20 @@ update_particles()
       vy = vy * -1;
     }
 
-    // Update x and y positions.
+    // Set new z direction based on depth collision with wall.
+    if (pz + radius >= depth || pz - radius <= 0) {
+      vz = vz * -1;
+    }
+
+    // Update particle position.
     pxvec[id] = px + (vx*delta);
     pyvec[id] = py - (vy*delta) - (0.5 * g * delta * delta);
+    pzvec[id] = pz + (vz*delta);
 
-    // Update vx and vy components.
+    // Update velocity components.
     vxvec[id] = vx;  // vx only as acceleration in x-direction is 0.
     vyvec[id] = vy + 0.5*(g)*delta;
+    vzvec[id] = vz; // vz only as acceleration in z-direction is 0.
 
     // Correct x position in case updated position goes past wall.
     if (pxvec[id] - radius <= 0) {
@@ -211,6 +243,13 @@ update_particles()
     } else if (pyvec[id] + radius >= height) {
       pyvec[id] = height - radius;
     }
+
+    // Correct z position in case updated position goes past wall.
+    if (pzvec[id] - radius <= 0) {
+      pzvec[id] = radius;
+    } else if (pzvec[id] + radius >= depth) {
+      pzvec[id] = depth - radius;
+    }
   }
 
   return 1;
@@ -221,8 +260,14 @@ void
 print_all_particle_details()
 {
   for (int i = 0; i < n; ++i) {
-    printf("particles[%d]: px=%f, py=%f, vx=%f, vy=%f\n",
-            i, pxvec[i], pyvec[i], vxvec[i], vyvec[i]);
+    cout << "particles" << i
+    << ": "
+    << "px=" << pxvec[i] << ", "
+    << "py=" << pyvec[i] << ", "
+    << "pz=" << pzvec[i] << ", "
+    << "vx=" << vxvec[i] << ", "
+    << "vy=" << vyvec[i] << ", "
+    << "vz=" << vzvec[i] << "\n";
   }
 }
 
@@ -246,7 +291,7 @@ write_all_particle_details_to_file(string filename)
 
     for (int i = 0; i < n; ++i) {
       // Write particle i's position to file.
-      myfile << pxvec[i] << " " << pyvec[i] << " " << 0 << "\n";
+      myfile << pxvec[i] << " " << pyvec[i] << " " << pzvec[i] << "\n";
     }
 
     myfile.close();
@@ -267,9 +312,11 @@ init_params(int argc, char *argv[])
   use_openacc = 0;          // By default, do not use OpenACC.
   width = DEFAULT_WIDTH;    // Width of box containing particles.
   height = DEFAULT_HEIGHT;  // Height of box containing particles.
+  depth = DEFAULT_DEPTH;    // Depth of box containing particles.
   n = 5;                    // Number of particles.
   fx = 50;                  // Horizontal component of the force field.
   fy = 50;                  // Vertical component of the force field.
+  fz = 50;                  // Depth component of the force field.
   radius = 5;               // Radius of the particles, in pixels.
   delta = 1.0;              // Time, in seconds, for inter-frame interval.
   total_time_interval = 10; // Time, in seconds, for total time interval.
@@ -292,6 +339,7 @@ init_params(int argc, char *argv[])
   printf("n=%d\n", n);
   printf("fx=%f\n", fx);
   printf("fy=%f\n", fy);
+  printf("fz=%f\n", fz);
   printf("radius=%f\n", radius);
   printf("delta=%f\n", delta);
   printf("total_time_interval=%d\n", total_time_interval);
@@ -326,6 +374,9 @@ process_arg(char *arg)
 
   else if (strstr(arg, "fy="))
   return sscanf(arg, "fy=%f", &fy) == 1;
+
+  else if (strstr(arg, "fz="))
+  return sscanf(arg, "fz=%f", &fy) == 1;
 
   else if (strstr(arg, "radius="))
   return sscanf(arg, "radius=%f", &radius) == 1;
