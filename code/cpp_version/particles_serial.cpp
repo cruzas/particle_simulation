@@ -5,6 +5,7 @@
 */
 
 #include <ctime>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
@@ -14,13 +15,16 @@
 #include "particles.h"
 
 using namespace std;
+using namespace std::chrono; // For timing.
 
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 800
+
 #define DEBUGGING 1
 #undef DEBUGGING
 
 static const string PDPATH = "./particle_positions/";  // Path to write files to.
+static int use_openacc;     // Whether we use OpenACC or not.
 static int width;         // Width of box containing particles.
 static int height;        // Height of box containing particles.
 static int n;             // Number of particles.
@@ -44,7 +48,8 @@ int write_all_particle_details_to_file(string filename);
 void
 print_usage()
 {
-  cerr << "Usage: [width=box_width] "
+  cerr << "Usage: << [use_openacc=1 or 0] "
+       << "[width=box_width] "
        << "[height=box_height] "
        << "[n=num_particles] "
        << "[fx=forcefield_x] "
@@ -65,6 +70,8 @@ main(int argc, char *argv[])
     return -1;
   }
 
+  auto avg_duration = 0;
+
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
   int nCycles = total_time_interval / delta;
@@ -76,11 +83,24 @@ main(int argc, char *argv[])
 
     string filename ("positions_" + current_time_frame_string + ".vtk");
 
+    // Call function to update particle details and time it.
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
     update_particles();
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+    // Add current duration to average, to be later divided by number of cycles,
+    // which is the number of times update_particles() is called.
+    auto duration = duration_cast<microseconds>( t2 - t1 ).count();
+    avg_duration += duration;
+
     if (!write_all_particle_details_to_file(filename)) {
       cerr << "Could not write file: " << filename << "\n";
     }
   }
+
+  // Calculate average duration.
+  avg_duration /= nCycles;
+  cout << "avg_duration=" << avg_duration << "\n";
 
   return 0;
 }
@@ -237,6 +257,7 @@ int
 init_params(int argc, char *argv[])
 {
 
+  use_openacc = 0;          // By default, do not use OpenACC.
   width = DEFAULT_WIDTH;    // Width of box containing particles.
   height = DEFAULT_HEIGHT;  // Height of box containing particles.
   n = 5;                    // Number of particles.
@@ -246,6 +267,7 @@ init_params(int argc, char *argv[])
   delta = 1.0;              // Time, in seconds, for inter-frame interval.
   total_time_interval = 10; // Time, in seconds, for total time interval.
   g = -9.8;                 // Gravitational factor (in y direction).
+
 
   // Read and process command-line arguments.
   for (int i = 1; i < argc; ++i) {
@@ -257,6 +279,7 @@ init_params(int argc, char *argv[])
   }
 
   #ifdef DEBUGGING
+  printf("use_openacc=%d\n", use_openacc);
   printf("width=%d\n", width);
   printf("height=%d\n", height);
   printf("n=%d\n", n);
@@ -279,10 +302,13 @@ init_params(int argc, char *argv[])
 int
 process_arg(char *arg)
 {
-  if (strstr(arg, "width="))
+  if (strstr(arg, "use_openacc="))
+  return sscanf(arg, "use_openacc=%d", &use_openacc) == 1;
+
+  else if (strstr(arg, "width="))
   return sscanf(arg, "width=%d", &width) == 1;
 
-  if (strstr(arg, "height="))
+  else if (strstr(arg, "height="))
   return sscanf(arg, "height=%d", &height) == 1;
 
   else if (strstr(arg, "n="))
