@@ -79,7 +79,7 @@ main(int argc, char *argv[])
     float current_time_frame = delta * cycle;
 
     string current_time_frame_string = to_string(current_time_frame);
-    current_time_frame_string.erase(remove(current_time_frame_string.begin(), current_time_frame_string.end(), '.'), current_time_frame_string.end());
+    current_time_frame_string.erase(remove(current_time_frame_string.begin(), current_time_frame_string.end(), "."), current_time_frame_string.end());
 
     string filename ("positions_" + current_time_frame_string + ".vtk");
 
