@@ -9,7 +9,7 @@ LDFLAGS= -fsanitize=address
 SRCS=particles_serial.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
-all: particles_serial
+PROGS=particles_serial
 
 particles_serial: $(OBJS)
 	$(CXX) $(LDFLAGS) -o particles_serial $(OBJS)
@@ -22,6 +22,7 @@ depend: .depend
 
 clean:
 	$(RM) $(OBJS)
+	$(RM) $(PROGS)
 
 distclean: clean
 	$(RM) *~ .depend
