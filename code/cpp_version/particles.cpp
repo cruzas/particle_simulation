@@ -42,13 +42,13 @@ static float delta;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
 
-vector<float> pxvec;      // Vector of particle x positions.
-vector<float> pyvec;      // Vector of particle y positions.
-vector<float> pzvec;      // Vector of particle z positions.
+float * pxvec;      // Vector of particle x positions.
+float * pyvec;      // Vector of particle y positions.
+float * pzvec;      // Vector of particle z positions.
 
-vector<float> vxvec;      // Vector of particle velocity x components.
-vector<float> vyvec;      // Vectory of particle velocity y components.
-vector<float> vzvec;      // Vector of particle velocity z components.
+float * vxvec;      // Vector of particle velocity x components.
+float * vyvec;      // Vectory of particle velocity y components.
+float * vzvec;      // Vector of particle velocity z components.
 
 void print_all_particle_details();
 int write_all_particle_details_to_file(string filename);
@@ -130,6 +130,15 @@ main(int argc, char *argv[])
   avg_cpu_time /= nCycles;
   cout << "avg_cpu_time=" << avg_cpu_time << "\n";
 
+
+  delete [] pxvec;
+  delete [] pyvec;
+  delete [] pzvec;
+
+  delete [] vxvec;
+  delete [] vyvec;
+  delete [] vzvec;
+
   return 0;
 }
 
@@ -141,13 +150,21 @@ int
 init_particles()
 {
   // Allocate space for particle positions.
-  pxvec.reserve(n);
-  pyvec.reserve(n);
-  pzvec.reserve(n);
+  // pxvec.reserve(n);
+  // pyvec.reserve(n);
+  // pzvec.reserve(n);
+
+  pxvec = new float[n];
+  pyvec = new float[n];
+  pzvec = new float[n];
+
   // Allocate space for particle velocities.
-  vxvec.reserve(n);
-  vyvec.reserve(n);
-  vzvec.reserve(n);
+  // vxvec.reserve(n);
+  // vyvec.reserve(n);
+  // vzvec.reserve(n);
+  vxvec = new float[n];
+  vyvec = new float[n];
+  vzvec = new float[n];
 
   /* The srand() function sets its argument seed as the seed for a new
    * sequence of pseudo-random numbers to be returned by rand().  These
@@ -165,17 +182,23 @@ init_particles()
 //#pragma acc kernels
   for (int id = 0; id < n; ++id) {
     // Set x position.
-    pxvec.push_back((float) (rand() % DEFAULT_WIDTH));
+    // pxvec.push_back((float) (rand() % DEFAULT_WIDTH));
+    pxvec[id] = (float) (rand() % DEFAULT_WIDTH);
     // Set y position.
-    pyvec.push_back((float) (rand() % DEFAULT_HEIGHT));
+    // pyvec.push_back((float) (rand() % DEFAULT_HEIGHT));
+    pyvec[id] = (float) (rand() % DEFAULT_HEIGHT);
     // Set z position.
-    pzvec.push_back((float) (rand() % DEFAULT_DEPTH));
+    // pzvec.push_back((float) (rand() % DEFAULT_DEPTH));
+    pzvec[id] = (float) (rand() % DEFAULT_DEPTH);
     // Set velocity x-component.
-    vxvec.push_back(rand() / (float) RAND_MAX * fx);
+    // vxvec.push_back(rand() / (float) RAND_MAX * fx);
+    vxvec[id] = rand() / (float) RAND_MAX * fx;
     // Set velocity y-component.
-    vyvec.push_back(rand() / (float) RAND_MAX * fy);
+    // vyvec.push_back(rand() / (float) RAND_MAX * fy);
+    vyvec[id] = rand() / (float) RAND_MAX * fy;
     // Set velocity z-component.
-    vzvec.push_back(rand() / (float) RAND_MAX * fz);
+    // vzvec.push_back(rand() / (float) RAND_MAX * fz);
+    vzvec[id] = rand() / (float) RAND_MAX * fz;
 
     // Correct starting x position.
     if (pxvec[id] - radius <= 0) {
@@ -211,7 +234,8 @@ int
 update_particles()
 {
   // Loop through all particles
-#pragma acc kernels  
+#pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
+copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) 
 for (int id = 0; id < n; ++id) {
     float px = pxvec[id];  // x position.
     float py = pyvec[id];  // y position.
