@@ -4,7 +4,7 @@ CC=pgcc
 CXX=pgc++
 # CXX=pgcc
 RM=rm -f
-CPPFLAGS=-g $(shell pkg-config --cflags)
+CPPFLAGS=-g -std=c++11 $(shell pkg-config --cflags)
 LDFLAGS = -std=c++11 -L/cluster_nfs/scratch/clutest/cluster_nfs/Data_Apps/apps/gcc/gcc-6.1.0/lib64
 
 SRCS=particles_serial.cpp

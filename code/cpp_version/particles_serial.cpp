@@ -100,6 +100,7 @@ main(int argc, char *argv[])
 
     memmove(&cstr[start], &cstr[start + 1], strlen(cstr) - start);
     string actual_string(cstr);
+    delete [] cstr;
 
     string filename ("positions_" + actual_string + ".vtk");
 
@@ -395,4 +396,3 @@ process_arg(char *arg)
   // Return 0 if the given command-line parameter was invalid.
   return 0;
 }
-                                                                                                                                                                                                                        
