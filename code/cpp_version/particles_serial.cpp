@@ -4,6 +4,7 @@
 * This program simulates particle movement in 2D space.
 */
 
+#include <algorithm>
 #include <ctime>
 #include <cstring>
 #include <chrono>
@@ -12,6 +13,7 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 #include <vector>
 
 #include "particles.h"
@@ -80,7 +82,11 @@ main(int argc, char *argv[])
     return -1;
   }
 
-  // auto avg_duration = 0;
+  // double avg_cpu_time_used = 0;
+  struct timespec t1;
+  struct timespec t2;
+
+  double avg_cpu_time = 0;
 
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
@@ -91,6 +97,7 @@ main(int argc, char *argv[])
     string cur_timeframe_str = to_string(current_time_frame);
 
     // Replace '.' in number.
+    // cur_timeframe_str.erase(std::remove(cur_timeframe_str.begin(), cur_timeframe_str.end(), '.'), cur_timeframe_str.end());
     string::size_type start = 0;
     string dot = ".";
     start = cur_timeframe_str.find(dot, start);
@@ -105,14 +112,13 @@ main(int argc, char *argv[])
     string filename ("positions_" + actual_string + ".vtk");
 
     // Call function to update particle details and time it.
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t1);
     update_particles();
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t2);
 
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
-    // auto duration = duration_cast<nanoseconds>( t2 - t1 ).count();
-    // avg_duration += duration;
+    avg_cpu_time += t2.tv_nsec-t1.tv_nsec ;
 
     if (!write_all_particle_details_to_file(filename)) {
       cerr << "Could not write file: " << filename << "\n";
@@ -121,8 +127,8 @@ main(int argc, char *argv[])
   }
 
   // Calculate average duration.
-  // avg_duration /= nCycles;
-  // cout << "avg_duration=" << avg_duration << "\n";
+  avg_cpu_time /= nCycles;
+  cout << "avg_cpu_time=" << avg_cpu_time << "\n";
 
   return 0;
 }

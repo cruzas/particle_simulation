@@ -4,6 +4,9 @@
 
 declare -a nParticles=(10 100 1000 10000)
 
+pos=$(( ${#nParticles[*]} - 1 ))
+last=${nParticles[$pos]}
+
 filename_serial="benchmark_serial.txt"
 
 echo "num_particles" "," "time_ns" > $filename_serial
