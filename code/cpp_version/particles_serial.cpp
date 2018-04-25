@@ -4,7 +4,6 @@
 * This program simulates particle movement in 2D space.
 */
 
-#include <algorithm>
 #include <ctime>
 #include <cstring>
 #include <chrono>
@@ -81,7 +80,7 @@ main(int argc, char *argv[])
     return -1;
   }
 
-  auto avg_duration = 0;
+  // auto avg_duration = 0;
 
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
@@ -92,7 +91,6 @@ main(int argc, char *argv[])
     string cur_timeframe_str = to_string(current_time_frame);
 
     // Replace '.' in number.
-    // cur_timeframe_str.erase(std::remove(cur_timeframe_str.begin(), cur_timeframe_str.end(), '.'), cur_timeframe_str.end());
     string::size_type start = 0;
     string dot = ".";
     start = cur_timeframe_str.find(dot, start);
@@ -104,7 +102,6 @@ main(int argc, char *argv[])
     string actual_string(cstr);
 
     string filename ("positions_" + actual_string + ".vtk");
-    // string filename ("positions_" + cur_timeframe_str + ".vtk");
 
     // Call function to update particle details and time it.
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
@@ -113,8 +110,8 @@ main(int argc, char *argv[])
 
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
-    auto duration = duration_cast<nanoseconds>( t2 - t1 ).count();
-    avg_duration += duration;
+    // auto duration = duration_cast<nanoseconds>( t2 - t1 ).count();
+    // avg_duration += duration;
 
     if (!write_all_particle_details_to_file(filename)) {
       cerr << "Could not write file: " << filename << "\n";
@@ -123,8 +120,8 @@ main(int argc, char *argv[])
   }
 
   // Calculate average duration.
-  avg_duration /= nCycles;
-  cout << "avg_duration=" << avg_duration << "\n";
+  // avg_duration /= nCycles;
+  // cout << "avg_duration=" << avg_duration << "\n";
 
   return 0;
 }
@@ -398,3 +395,4 @@ process_arg(char *arg)
   // Return 0 if the given command-line parameter was invalid.
   return 0;
 }
+                                                                                                                                                                                                                        
