@@ -1,11 +1,10 @@
 #!/bin/bash
 # Bash script used to collect data on performance of particle simulation.
-# Author: Samuel A. Cruz Alegría
 
 declare -a nParticles=(10 100 1000 10000)
 
-pos=$(( ${#nParticles[*]} - 1 ))
-last=${nParticles[$pos]}
+#pos=$(( ${#nParticles[*]} - 1 ))
+#last=${nParticles[$pos]}
 
 filename_serial="benchmark_serial.txt"
 
@@ -30,8 +29,8 @@ done
 # TODO: Execute code using OpenACC.
 # declare -a nParticles=(10 100 1000 10000)
 
-pos=$(( ${#nParticles[*]} - 1 ))
-last=${nParticles[$pos]}
+#pos=$(( ${#nParticles[*]} - 1 ))
+#last=${nParticles[$pos]}
 
 filename_parallel="benchmark_parallel.txt"
 
@@ -49,5 +48,6 @@ do
   echo $iParticles "," $avg_time >> $filename_parallel
 
   rm particle_positions/positions_*.vtk
+done
 
 echo All done
