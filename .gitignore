@@ -17,8 +17,9 @@ deliverables/project_plan/project_plan.synctex.gz
 deliverables/plan/project_plan.synctex.gz
 code/.DS_Store
 *.gz
-code/cpp_version/particle_positions
 code/cpp_version/particles_serial
 code/cpp_version/particles_serial.o
 code/cpp_version/.depend
+code/cpp_version/particles_parallel
+code/cpp_version/particles_parallel.o
 .DS_Store

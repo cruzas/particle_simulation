@@ -25,7 +25,6 @@ do
   fi
 done
 
-# TODO: Execute code using OpenACC.
 # Keeping the following three commented in case we later want to execute
 # parallel code with more particles than in serial version. But we'd have
 # to have an nParticles2 variable or something of the sort.
