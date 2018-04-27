@@ -31,7 +31,7 @@ static float delta;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
 static float *pd;         // Particle details array.
-const double G = 6.67e-11;
+const float G = 6.67e-11;
 static int m=2;
 float F;
 //float forces[n]={};
@@ -124,7 +124,7 @@ init_particles()
     int py_i = id*7 + 1;  // y-position index.
     int vx_i = id*7 + 2;  // vx-component index.
     int vy_i = id*7 + 3;  // vy-component index.
-      
+
     int ax_i = id*7+4;
     int ay_i = id*7+5;
     int m_i = id*7+6;
@@ -135,10 +135,10 @@ init_particles()
     //pd[vy_i] = rand() / (float) RAND_MAX * fy;      // Set vy component.
     pd[px_i] = 5*id+5;
     pd[py_i] =5*id+5;
-      
+
     pd[vx_i] = 5.0;      // Set vx component.
     pd[vy_i] = 5.0;      // Set vy component.
-      
+
     pd[ax_i] = 0.0;      // Set ax component.
     pd[ay_i] = 0.0;      // Set ay component.
     pd[m_i] = 2; //Set mass
@@ -177,13 +177,13 @@ update_particles()
     //float totalSimulationTime = 10; // The simulation will run for 10 seconds.
     //float currentTime = 0; // This accumulates the time that has passed.
     for (int id=0;id<n;id++){
-        
+
         int px_id = id*7;      // x-position index.
         int py_id = id*7 + 1;  // y-position index.
         cout<<"\nPositions before the update:  ";
         cout<<"\nid: "<<id;
         cout<<"X: "<<pd[px_id]<<"Y: "<<pd[py_id];
-        
+
     }
 
         for (int id = 0; id < n; id++) {
@@ -191,11 +191,11 @@ update_particles()
             int py_i = id*7 + 1;  // y-position index.
             int vx_i = id*7 + 2;  // vx-component index.
             int vy_i = id*7 + 3;  // vy-component index.
-            
+
             int ax_i = id*7+4;
             int ay_i = id*7+5;
             int m_i = id*7+6;
-            
+
             //pd[px_i]=1;  // x position.
             //pd[py_i]=1;
 
@@ -206,7 +206,7 @@ update_particles()
             float ax = pd[ax_i];
             float ay = pd[ay_i];
             int   mass=pd[m_i];
-            
+
             cout<<"\nID: "<<id;
             cout<<"\npx: "<<px;
             cout<<"\npy: "<<py;
@@ -214,7 +214,7 @@ update_particles()
             cout<<"\nvy: "<<vy;
             cout<<"\nax: "<<ax;
             cout<<"\nay: "<<ay;
-            
+
             // Set new x direction based on horizontal collision with wall.
             if (px + radius >= width || px - radius <= 0) {
                 vx = vx * -1;
@@ -224,23 +224,23 @@ update_particles()
             if (py - radius <= 0 || py + radius >= height) {
                 vy = vy * -1;
             }
-  
-            
-            for( int id2 = 0; id2 < n; id2++){
-                
 
-                   
+
+            for( int id2 = 0; id2 < n; id2++){
+
+
+
                     int px_2 = id2*7;      // x-position index.
                     int py_2 = id2*7 + 1;  // y-position index.
                     int vx_2 = id2*7 + 2;  // vx-component index.
                     int vy_2 = id2*7 + 3;  // vy-component index.
-                    
+
                     int ax_2 = id2*7+4;
                     int ay_2 = id2*7+5;
                     int m_2 = id2*7+6;
                     //pd[px_2]=4;
                     //pd[px_2]=4;
-                    
+
                     float px2 = pd[px_2];  // x position.
                     float py2 = pd[py_2];  // y position.
                     float vx2 = pd[vx_2];  // vx component.
@@ -248,43 +248,48 @@ update_particles()
                     float ax2 = pd[ax_2];
                     float ay2 = pd[ay_2];
                     int   mass2=pd[m_2];
-         
+
                     float d = sqrt((px - px2)*(px - px2) + (py - py2)*(py - py2));
                if (d>1e-6) {
                     float F=0;
-                    F=G*(2/d*d);
-                    
+
+                    // REVIEW
+                    // Force should be in units: 1 kg	*	1 m/s^2 = 1 Newton
+                    // but here, it is m^3 kg^-1 s^-2 / m^2 = m * kg^-1 * s^-2 = m / kg s^2
+                    // as G is in m^3 kg^-1 s^-2, and d*d is m^2.
+                    F=G*(2/d*d); //
+
                     float dx=px2-px;
                     float dy=py2-py;
-                    
+
                     //float FX = F*(dx/d);
                     //float FY = F*(dy/d);
-                   
+
                    float FX = F*dx;
                    float FY = F*dy;
-                    
+
                    //pd[id*7+4] += FX/2;
                    //pd[id*7+5] += FY/2;
                    pd[id*7+4] += FX;
                    pd[id*7+5] += FY;
-                   
+
                    //cout<<"\nid: "<<id;
                    //cout<<"\nX: "<<pd[id*7+4]<<"\nY: "<<pd[id*7+5];
                   //cout<<"\nerror: "<<d;
                 }
-                
+
             }
-            
+
         }
-    
+
     for(int i=0;i<n;i++)
     {
-            
+
             pd[i*7 + 2] += pd[i*7 + 4]*delta;
             pd[i*7 + 3] += pd[i*7 + 5]*delta;
-        
+
     }
-    
+
     for(int j=0;j<n;j++)
     {
 
@@ -294,10 +299,10 @@ update_particles()
         //cout<<"\nX:"<<pd[j*7]<<"\nY"<<pd[j*7+1];
 
         }
-        
+
     //pd[0*7] = pd[0*7]+pd[0*7 + 2]*delta; // m = m +(m/s * s)
     //pd[0*7+1] = pd[0*7+1]+pd[0*7 + 3]*delta;
-   
+
         /*
             // Correct x position in case updated position goes past wall.
             if (pd[px_i] - radius <= 0) {
@@ -333,28 +338,28 @@ int
 write_all_particle_details_to_file(string filename)
 {
     ofstream myfile;
-    
+
     myfile.open(PDPATH + filename, ios::out);
     if (myfile.is_open()) {
-        
+
         myfile << "# vtk DataFile Version 1.0\n";
         myfile << "3D triangulation data\n";
         myfile << "ASCII\n\n";
-        
+
         myfile << "DATASET POLYDATA\n";
         myfile << "POINTS " << n << " float\n";
-        
+
         for (int i = 0; i < n; ++i) {
             // myfile << i << " " << pd[i*4] << " " << pd[i*4 + 1] << "\n";
             myfile << pd[i*4] << " " << pd[i*4 + 1] << " " << 0 << "\n";
         }
-        
+
         myfile.close();
     } else {
         cerr << "Unable to open file: " << filename << "\n";
         return 0;
     }
-    
+
     return 1;
 }
 
@@ -403,7 +408,7 @@ float compute_force(m,r1,r2)
     double d=(r1-r2)^2;
     if (d==0) {
         d=0.001;
-        
+
     }
     return G*(m/(d));
 }
