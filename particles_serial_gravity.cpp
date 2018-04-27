@@ -31,8 +31,9 @@ static float delta;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
 static float *pd;         // Particle details array.
+// REVIEW: Changed G and m to float because we are using float *pd.
 const float G = 6.67e-11;
-static int m=2;
+static float m = 2;
 float F;
 //float forces[n]={};
 
@@ -125,23 +126,23 @@ init_particles()
     int vx_i = id*7 + 2;  // vx-component index.
     int vy_i = id*7 + 3;  // vy-component index.
 
-    int ax_i = id*7+4;
-    int ay_i = id*7+5;
-    int m_i = id*7+6;
+    int ax_i = id*7 + 4;
+    int ay_i = id*7 + 5;
+    int m_i = id*7 + 6;
 
     //pd[px_i] = (double) (rand() % DEFAULT_WIDTH);   // Set x position.
     //pd[py_i] = (double) (rand() % DEFAULT_HEIGHT);  // Set y position.
     //pd[vx_i] = rand() / (float) RAND_MAX * fx;      // Set vx component.
     //pd[vy_i] = rand() / (float) RAND_MAX * fy;      // Set vy component.
-    pd[px_i] = 5*id+5;
-    pd[py_i] =5*id+5;
+    pd[px_i] = 5*id + 5;
+    pd[py_i] = 5*id + 5;
 
     pd[vx_i] = 5.0;      // Set vx component.
     pd[vy_i] = 5.0;      // Set vy component.
 
     pd[ax_i] = 0.0;      // Set ax component.
     pd[ay_i] = 0.0;      // Set ay component.
-    pd[m_i] = 2; //Set mass
+    pd[m_i] = 2.0; //Set mass
 
     // Correct starting x position.
     if (pd[px_i] - radius <= 0) {
@@ -177,13 +178,11 @@ update_particles()
   //float totalSimulationTime = 10; // The simulation will run for 10 seconds.
   //float currentTime = 0; // This accumulates the time that has passed.
   for (int id=0;id<n;id++){
-
     int px_id = id*7;      // x-position index.
     int py_id = id*7 + 1;  // y-position index.
     cout<<"\nPositions before the update:  ";
     cout<<"\nid: "<<id;
     cout<<"X: "<<pd[px_id]<<"Y: "<<pd[py_id];
-
   }
 
   for (int id = 0; id < n; id++) {
@@ -192,9 +191,9 @@ update_particles()
     int vx_i = id*7 + 2;  // vx-component index.
     int vy_i = id*7 + 3;  // vy-component index.
 
-    int ax_i = id*7+4;
-    int ay_i = id*7+5;
-    int m_i = id*7+6;
+    int ax_i = id*7 + 4;
+    int ay_i = id*7 + 5;
+    int m_i = id*7 + 6;
 
     //pd[px_i]=1;  // x position.
     //pd[py_i]=1;
@@ -205,7 +204,7 @@ update_particles()
     float vy = pd[vy_i];  // vy component.
     float ax = pd[ax_i];
     float ay = pd[ay_i];
-    int   mass=pd[m_i];
+    float mass = pd[m_i];
 
     cout<<"\nID: "<<id;
     cout<<"\npx: "<<px;
@@ -227,17 +226,14 @@ update_particles()
 
 
     for( int id2 = 0; id2 < n; id2++){
-
-
-
       int px_2 = id2*7;      // x-position index.
       int py_2 = id2*7 + 1;  // y-position index.
       int vx_2 = id2*7 + 2;  // vx-component index.
       int vy_2 = id2*7 + 3;  // vy-component index.
 
-      int ax_2 = id2*7+4;
-      int ay_2 = id2*7+5;
-      int m_2 = id2*7+6;
+      int ax_2 = id2*7 + 4;
+      int ay_2 = id2*7 + 5;
+      int m_2 = id2*7 + 6;
       //pd[px_2]=4;
       //pd[px_2]=4;
 
@@ -247,24 +243,31 @@ update_particles()
       float vy2 = pd[vy_2];  // vy component.
       float ax2 = pd[ax_2];
       float ay2 = pd[ay_2];
-      int   mass2=pd[m_2];
+      float mass2 = pd[m_2];
 
       float d = sqrt((px - px2)*(px - px2) + (py - py2)*(py - py2));
-      if (d>1e-6) {
-        float F=0;
+      if (d > 1e-6) {
+        // REVIEW: Already ahd declared a variable float F in global scope in
+        // line 37. Which one is most appropriate for our purposes?
+        float F = 0;
 
-        // REVIEW
-        // Force should be in units: 1 kg	*	1 m/s^2 = 1 Newton
-        // but here, it is m^3 kg^-1 s^-2 / m^2 = m * kg^-1 * s^-2 = m / kg s^2
+        // REVIEW: Force should be in Newtons: kg	*	m/s^2,
+        // but here, it is in m^3 kg^-1 s^-2 / m^2 = m * kg^-1 * s^-2 = m / kg s^2
         // as G is in m^3 kg^-1 s^-2, and d*d is m^2.
-        F=G*(2/d*d);
+        // NOTE: (d*d) should be enclosed in brackets, otherwise it was
+        // (2/d) * d
+        F = G * (2.0/(d*d));
 
-        float dx=px2-px;
-        float dy=py2-py;
+        float dx = px2-px;
+        float dy = py2-py;
 
         //float FX = F*(dx/d);
         //float FY = F*(dy/d);
 
+        // REVIEW
+        // Force should be in Newtons: kg	*	m/s^2,
+        // Supposing previous F was computed correctly, wouldn't the following
+        // lead to FX and FY being in kg * m^2/s^2?
         float FX = F*dx;
         float FY = F*dy;
 
@@ -274,9 +277,10 @@ update_particles()
         // REVIEW
         // These two represent the a_x and a_y components, which should be in ms^-2
         // but we are adding force, which does not have the same units as acceleration...
-        // Moreover, the force was not calculated with correct units here.
-        // Once we fix that and it is computed with right units, we should be able to
+        // Moreover, the force was not calculated with correct units before ---
+        // once we fix that and it is computed with right units, we should be able to
         // do the same here but dividing by m, i.e., FX/m and FY/m/
+        // Also, are we sure we want += here and not just =?
         pd[id*7+4] += FX;
         pd[id*7+5] += FY;
 
@@ -289,19 +293,22 @@ update_particles()
 
   }
 
+  // Update velocity components.
   for(int i=0;i<n;i++)
   {
-
-    pd[i*7 + 2] += pd[i*7 + 4]*delta;
-    pd[i*7 + 3] += pd[i*7 + 5]*delta;
+    // REVIEW: Are we sure that this should be += and not just =?
+    // I.e., a * dt = v at the current time step ... we don't necessarily want
+    // to add the velocities in each time step, right?
+    pd[i*7 + 2] += pd[i*7 + 4] * delta;
+    pd[i*7 + 3] += pd[i*7 + 5] * delta;
 
   }
 
+  // Update position components.
   for(int j=0;j<n;j++)
   {
-
-    pd[j*7] = pd[j*7]+pd[j*7 + 2]*delta; // m = m +(m/s * s)
-    pd[j*7+1] = pd[j*7+1]+pd[j*7 + 3]*delta;
+    pd[j*7] = pd[j*7] + pd[j*7 + 2]*delta; // m = m +(m/s * s); m for metres here.
+    pd[j*7 + 1] = pd[j*7 + 1] + pd[j*7 + 3]*delta;
     //cout<<"\nid: "<<j;
     //cout<<"\nX:"<<pd[j*7]<<"\nY"<<pd[j*7+1];
 
