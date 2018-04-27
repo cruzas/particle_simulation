@@ -48,14 +48,14 @@ void
 print_usage()
 {
   cerr << "Usage: [width=box_width] "
-       << "[height=box_height] "
-       << "[n=num_particles] "
-       << "[fx=forcefield_x] "
-       << "[fy=forcefield_y] "
-       << "[trace=shading_factor_trace] "
-       << "[radius=particle_radius] "
-       << "[delta=inter_frame_interval_in_seconds] "
-       << "[total_time_interval=total_time_in_seconds]\n";
+  << "[height=box_height] "
+  << "[n=num_particles] "
+  << "[fx=forcefield_x] "
+  << "[fy=forcefield_y] "
+  << "[trace=shading_factor_trace] "
+  << "[radius=particle_radius] "
+  << "[delta=inter_frame_interval_in_seconds] "
+  << "[total_time_interval=total_time_in_seconds]\n";
 }
 
 
@@ -107,15 +107,15 @@ init_particles()
   }
 
   /* The srand() function sets its argument seed as the seed for a new
-   * sequence of pseudo-random numbers to be returned by rand().  These
-   * sequences are repeatable by calling srand() with the same seed value.
-   *
-   *
-   * time(0) explanation from: https://stackoverflow.com/questions/4736485/srandtime0-and-random-number-generation
-   * time(0) gives the time in seconds since the Unix epoch, which is a
-   * pretty good "unpredictable" seed (you're guaranteed your seed will be the
-   * same only once, unless you start your program multiple times within the
-   * same second).*/
+  * sequence of pseudo-random numbers to be returned by rand().  These
+  * sequences are repeatable by calling srand() with the same seed value.
+  *
+  *
+  * time(0) explanation from: https://stackoverflow.com/questions/4736485/srandtime0-and-random-number-generation
+  * time(0) gives the time in seconds since the Unix epoch, which is a
+  * pretty good "unpredictable" seed (you're guaranteed your seed will be the
+  * same only once, unless you start your program multiple times within the
+  * same second).*/
   srand(time(0));
 
   // Go through all particles and initialize their details at random.
@@ -174,151 +174,158 @@ init_particles()
 int
 update_particles()
 {
-    //float totalSimulationTime = 10; // The simulation will run for 10 seconds.
-    //float currentTime = 0; // This accumulates the time that has passed.
-    for (int id=0;id<n;id++){
+  //float totalSimulationTime = 10; // The simulation will run for 10 seconds.
+  //float currentTime = 0; // This accumulates the time that has passed.
+  for (int id=0;id<n;id++){
 
-        int px_id = id*7;      // x-position index.
-        int py_id = id*7 + 1;  // y-position index.
-        cout<<"\nPositions before the update:  ";
-        cout<<"\nid: "<<id;
-        cout<<"X: "<<pd[px_id]<<"Y: "<<pd[py_id];
+    int px_id = id*7;      // x-position index.
+    int py_id = id*7 + 1;  // y-position index.
+    cout<<"\nPositions before the update:  ";
+    cout<<"\nid: "<<id;
+    cout<<"X: "<<pd[px_id]<<"Y: "<<pd[py_id];
+
+  }
+
+  for (int id = 0; id < n; id++) {
+    int px_i = id*7;      // x-position index.
+    int py_i = id*7 + 1;  // y-position index.
+    int vx_i = id*7 + 2;  // vx-component index.
+    int vy_i = id*7 + 3;  // vy-component index.
+
+    int ax_i = id*7+4;
+    int ay_i = id*7+5;
+    int m_i = id*7+6;
+
+    //pd[px_i]=1;  // x position.
+    //pd[py_i]=1;
+
+    float px = pd[px_i];  // x position.
+    float py = pd[py_i];  // y position.
+    float vx = pd[vx_i];  // vx component.
+    float vy = pd[vy_i];  // vy component.
+    float ax = pd[ax_i];
+    float ay = pd[ay_i];
+    int   mass=pd[m_i];
+
+    cout<<"\nID: "<<id;
+    cout<<"\npx: "<<px;
+    cout<<"\npy: "<<py;
+    cout<<"\nvx: "<<vx;
+    cout<<"\nvy: "<<vy;
+    cout<<"\nax: "<<ax;
+    cout<<"\nay: "<<ay;
+
+    // Set new x direction based on horizontal collision with wall.
+    if (px + radius >= width || px - radius <= 0) {
+      vx = vx * -1;
+    }
+
+    // Set new y direction based on vertical collision with wall.
+    if (py - radius <= 0 || py + radius >= height) {
+      vy = vy * -1;
+    }
+
+
+    for( int id2 = 0; id2 < n; id2++){
+
+
+
+      int px_2 = id2*7;      // x-position index.
+      int py_2 = id2*7 + 1;  // y-position index.
+      int vx_2 = id2*7 + 2;  // vx-component index.
+      int vy_2 = id2*7 + 3;  // vy-component index.
+
+      int ax_2 = id2*7+4;
+      int ay_2 = id2*7+5;
+      int m_2 = id2*7+6;
+      //pd[px_2]=4;
+      //pd[px_2]=4;
+
+      float px2 = pd[px_2];  // x position.
+      float py2 = pd[py_2];  // y position.
+      float vx2 = pd[vx_2];  // vx component.
+      float vy2 = pd[vy_2];  // vy component.
+      float ax2 = pd[ax_2];
+      float ay2 = pd[ay_2];
+      int   mass2=pd[m_2];
+
+      float d = sqrt((px - px2)*(px - px2) + (py - py2)*(py - py2));
+      if (d>1e-6) {
+        float F=0;
+
+        // REVIEW
+        // Force should be in units: 1 kg	*	1 m/s^2 = 1 Newton
+        // but here, it is m^3 kg^-1 s^-2 / m^2 = m * kg^-1 * s^-2 = m / kg s^2
+        // as G is in m^3 kg^-1 s^-2, and d*d is m^2.
+        F=G*(2/d*d);
+
+        float dx=px2-px;
+        float dy=py2-py;
+
+        //float FX = F*(dx/d);
+        //float FY = F*(dy/d);
+
+        float FX = F*dx;
+        float FY = F*dy;
+
+        //pd[id*7+4] += FX/2;
+        //pd[id*7+5] += FY/2;
+
+        // REVIEW
+        // These two represent the a_x and a_y components, which should be in ms^-2
+        // but we are adding force, which does not have the same units as acceleration...
+        // Moreover, the force was not calculated with correct units here.
+        // Once we fix that and it is computed with right units, we should be able to
+        // do the same here but dividing by m, i.e., FX/m and FY/m/
+        pd[id*7+4] += FX;
+        pd[id*7+5] += FY;
+
+        //cout<<"\nid: "<<id;
+        //cout<<"\nX: "<<pd[id*7+4]<<"\nY: "<<pd[id*7+5];
+        //cout<<"\nerror: "<<d;
+      }
 
     }
 
-        for (int id = 0; id < n; id++) {
-            int px_i = id*7;      // x-position index.
-            int py_i = id*7 + 1;  // y-position index.
-            int vx_i = id*7 + 2;  // vx-component index.
-            int vy_i = id*7 + 3;  // vy-component index.
+  }
 
-            int ax_i = id*7+4;
-            int ay_i = id*7+5;
-            int m_i = id*7+6;
+  for(int i=0;i<n;i++)
+  {
 
-            //pd[px_i]=1;  // x position.
-            //pd[py_i]=1;
+    pd[i*7 + 2] += pd[i*7 + 4]*delta;
+    pd[i*7 + 3] += pd[i*7 + 5]*delta;
 
-            float px = pd[px_i];  // x position.
-            float py = pd[py_i];  // y position.
-            float vx = pd[vx_i];  // vx component.
-            float vy = pd[vy_i];  // vy component.
-            float ax = pd[ax_i];
-            float ay = pd[ay_i];
-            int   mass=pd[m_i];
+  }
 
-            cout<<"\nID: "<<id;
-            cout<<"\npx: "<<px;
-            cout<<"\npy: "<<py;
-            cout<<"\nvx: "<<vx;
-            cout<<"\nvy: "<<vy;
-            cout<<"\nax: "<<ax;
-            cout<<"\nay: "<<ay;
+  for(int j=0;j<n;j++)
+  {
 
-            // Set new x direction based on horizontal collision with wall.
-            if (px + radius >= width || px - radius <= 0) {
-                vx = vx * -1;
-            }
+    pd[j*7] = pd[j*7]+pd[j*7 + 2]*delta; // m = m +(m/s * s)
+    pd[j*7+1] = pd[j*7+1]+pd[j*7 + 3]*delta;
+    //cout<<"\nid: "<<j;
+    //cout<<"\nX:"<<pd[j*7]<<"\nY"<<pd[j*7+1];
 
-            // Set new y direction based on vertical collision with wall.
-            if (py - radius <= 0 || py + radius >= height) {
-                vy = vy * -1;
-            }
+  }
 
+  //pd[0*7] = pd[0*7]+pd[0*7 + 2]*delta; // m = m +(m/s * s)
+  //pd[0*7+1] = pd[0*7+1]+pd[0*7 + 3]*delta;
 
-            for( int id2 = 0; id2 < n; id2++){
+  /*
+  // Correct x position in case updated position goes past wall.
+  if (pd[px_i] - radius <= 0) {
+  pd[px_i] = radius;
+} else if (pd[px_i] + radius >= height) {
+pd[px_i] = width - radius;
+}
 
+// Correct y position in case updated position goes past wall.
+if (pd[py_i] - radius <= 0) {
+pd[py_i] = radius;
+} else if (pd[py_i] + radius >= height) {
+pd[py_i] = height - radius;
+}*/
 
-
-                    int px_2 = id2*7;      // x-position index.
-                    int py_2 = id2*7 + 1;  // y-position index.
-                    int vx_2 = id2*7 + 2;  // vx-component index.
-                    int vy_2 = id2*7 + 3;  // vy-component index.
-
-                    int ax_2 = id2*7+4;
-                    int ay_2 = id2*7+5;
-                    int m_2 = id2*7+6;
-                    //pd[px_2]=4;
-                    //pd[px_2]=4;
-
-                    float px2 = pd[px_2];  // x position.
-                    float py2 = pd[py_2];  // y position.
-                    float vx2 = pd[vx_2];  // vx component.
-                    float vy2 = pd[vy_2];  // vy component.
-                    float ax2 = pd[ax_2];
-                    float ay2 = pd[ay_2];
-                    int   mass2=pd[m_2];
-
-                    float d = sqrt((px - px2)*(px - px2) + (py - py2)*(py - py2));
-               if (d>1e-6) {
-                    float F=0;
-
-                    // REVIEW
-                    // Force should be in units: 1 kg	*	1 m/s^2 = 1 Newton
-                    // but here, it is m^3 kg^-1 s^-2 / m^2 = m * kg^-1 * s^-2 = m / kg s^2
-                    // as G is in m^3 kg^-1 s^-2, and d*d is m^2.
-                    F=G*(2/d*d); //
-
-                    float dx=px2-px;
-                    float dy=py2-py;
-
-                    //float FX = F*(dx/d);
-                    //float FY = F*(dy/d);
-
-                   float FX = F*dx;
-                   float FY = F*dy;
-
-                   //pd[id*7+4] += FX/2;
-                   //pd[id*7+5] += FY/2;
-                   pd[id*7+4] += FX;
-                   pd[id*7+5] += FY;
-
-                   //cout<<"\nid: "<<id;
-                   //cout<<"\nX: "<<pd[id*7+4]<<"\nY: "<<pd[id*7+5];
-                  //cout<<"\nerror: "<<d;
-                }
-
-            }
-
-        }
-
-    for(int i=0;i<n;i++)
-    {
-
-            pd[i*7 + 2] += pd[i*7 + 4]*delta;
-            pd[i*7 + 3] += pd[i*7 + 5]*delta;
-
-    }
-
-    for(int j=0;j<n;j++)
-    {
-
-            pd[j*7] = pd[j*7]+pd[j*7 + 2]*delta; // m = m +(m/s * s)
-            pd[j*7+1] = pd[j*7+1]+pd[j*7 + 3]*delta;
-        //cout<<"\nid: "<<j;
-        //cout<<"\nX:"<<pd[j*7]<<"\nY"<<pd[j*7+1];
-
-        }
-
-    //pd[0*7] = pd[0*7]+pd[0*7 + 2]*delta; // m = m +(m/s * s)
-    //pd[0*7+1] = pd[0*7+1]+pd[0*7 + 3]*delta;
-
-        /*
-            // Correct x position in case updated position goes past wall.
-            if (pd[px_i] - radius <= 0) {
-                pd[px_i] = radius;
-            } else if (pd[px_i] + radius >= height) {
-                pd[px_i] = width - radius;
-            }
-
-            // Correct y position in case updated position goes past wall.
-            if (pd[py_i] - radius <= 0) {
-                pd[py_i] = radius;
-            } else if (pd[py_i] + radius >= height) {
-                pd[py_i] = height - radius;
-            }*/
-
-  return 1;
+return 1;
 }
 
 /* Print the details of all particles.*/
@@ -327,7 +334,7 @@ print_all_particle_details()
 {
   for (int i = 0; i < n; ++i) {
     printf("particles[%d]: px=%f, py=%f, vx=%f, vy=%f\n",
-            i, pd[i*4], pd[i*4 + 1], pd[i*4 + 2], pd[i*4 + 3]);
+    i, pd[i*4], pd[i*4 + 1], pd[i*4 + 2], pd[i*4 + 3]);
   }
 }
 
@@ -337,30 +344,30 @@ print_all_particle_details()
 int
 write_all_particle_details_to_file(string filename)
 {
-    ofstream myfile;
+  ofstream myfile;
 
-    myfile.open(PDPATH + filename, ios::out);
-    if (myfile.is_open()) {
+  myfile.open(PDPATH + filename, ios::out);
+  if (myfile.is_open()) {
 
-        myfile << "# vtk DataFile Version 1.0\n";
-        myfile << "3D triangulation data\n";
-        myfile << "ASCII\n\n";
+    myfile << "# vtk DataFile Version 1.0\n";
+    myfile << "3D triangulation data\n";
+    myfile << "ASCII\n\n";
 
-        myfile << "DATASET POLYDATA\n";
-        myfile << "POINTS " << n << " float\n";
+    myfile << "DATASET POLYDATA\n";
+    myfile << "POINTS " << n << " float\n";
 
-        for (int i = 0; i < n; ++i) {
-            // myfile << i << " " << pd[i*4] << " " << pd[i*4 + 1] << "\n";
-            myfile << pd[i*4] << " " << pd[i*4 + 1] << " " << 0 << "\n";
-        }
-
-        myfile.close();
-    } else {
-        cerr << "Unable to open file: " << filename << "\n";
-        return 0;
+    for (int i = 0; i < n; ++i) {
+      // myfile << i << " " << pd[i*4] << " " << pd[i*4 + 1] << "\n";
+      myfile << pd[i*4] << " " << pd[i*4 + 1] << " " << 0 << "\n";
     }
 
-    return 1;
+    myfile.close();
+  } else {
+    cerr << "Unable to open file: " << filename << "\n";
+    return 0;
+  }
+
+  return 1;
 }
 
 /* Initialize default parameters.
@@ -405,12 +412,12 @@ init_params(int argc, char *argv[])
 /*
 float compute_force(m,r1,r2)
 {
-    double d=(r1-r2)^2;
-    if (d==0) {
-        d=0.001;
+double d=(r1-r2)^2;
+if (d==0) {
+d=0.001;
 
-    }
-    return G*(m/(d));
+}
+return G*(m/(d));
 }
 */
 /*
