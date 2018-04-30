@@ -92,24 +92,7 @@ main(int argc, char *argv[])
   // and time per frame.
   int nCycles = total_time_interval / delta;
   for (int cycle = 0; cycle < nCycles; ++cycle) {
-    float current_time_frame = delta * cycle;
-
-    string cur_timeframe_str = to_string(current_time_frame);
-
-    // Replace '.' in number.
-    // cur_timeframe_str.erase(std::remove(cur_timeframe_str.begin(), cur_timeframe_str.end(), '.'), cur_timeframe_str.end());
-    string::size_type start = 0;
-    string dot = ".";
-    start = cur_timeframe_str.find(dot, start);
-
-    char * cstr = new char [cur_timeframe_str.length()+1];
-    std::strcpy (cstr, cur_timeframe_str.c_str());
-
-    memmove(&cstr[start], &cstr[start + 1], strlen(cstr) - start);
-    string actual_string(cstr);
-    delete [] cstr;
-
-    string filename ("positions_" + actual_string + ".vtk");
+    string filename ("positions_" + to_string(cycle) + ".vtk");
 
     // Call function to update particle details and time it.
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t1);
@@ -235,7 +218,7 @@ update_particles()
 {
   // Loop through all particles
 #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) 
+copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n])
 for (int id = 0; id < n; ++id) {
     float px = pxvec[id];  // x position.
     float py = pyvec[id];  // y position.
