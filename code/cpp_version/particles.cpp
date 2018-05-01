@@ -91,6 +91,7 @@ main(int argc, char *argv[])
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
   int nCycles = total_time_interval / delta;
+
   for (int cycle = 0; cycle < nCycles; ++cycle) {
     string filename ("positions_" + to_string(cycle) + ".vtk");
 
@@ -111,7 +112,7 @@ main(int argc, char *argv[])
 
   // Calculate average duration.
   avg_cpu_time /= nCycles;
-  cout << "avg_cpu_time=" << avg_cpu_time << "\n";
+  cout << "avg_cpu_time (ns)=" << avg_cpu_time << "\n";
 
 
   delete [] pxvec;
@@ -163,6 +164,8 @@ init_particles()
 
   // Go through all particles and initialize their details at random.
 //#pragma acc kernels
+#pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
+copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n])
   for (int id = 0; id < n; ++id) {
     // Set x position.
     // pxvec.push_back((float) (rand() % DEFAULT_WIDTH));
