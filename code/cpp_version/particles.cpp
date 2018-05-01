@@ -168,23 +168,17 @@ init_particles()
 copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n])
   for (int id = 0; id < n; ++id) {
     // Set x position.
-    // pxvec.push_back((float) (rand() % DEFAULT_WIDTH));
-    pxvec[id] = (float) (rand() % DEFAULT_WIDTH);
+    pxvec[id] = (float) (id % DEFAULT_WIDTH);
     // Set y position.
-    // pyvec.push_back((float) (rand() % DEFAULT_HEIGHT));
-    pyvec[id] = (float) (rand() % DEFAULT_HEIGHT);
+    pyvec[id] = (float) (id % DEFAULT_HEIGHT);
     // Set z position.
-    // pzvec.push_back((float) (rand() % DEFAULT_DEPTH));
-    pzvec[id] = (float) (rand() % DEFAULT_DEPTH);
+    pzvec[id] = (float) (id % DEFAULT_DEPTH);
     // Set velocity x-component.
-    // vxvec.push_back(rand() / (float) RAND_MAX * fx);
-    vxvec[id] = rand() / (float) RAND_MAX * fx;
+    vxvec[id] = id / (float) RAND_MAX * fx;
     // Set velocity y-component.
-    // vyvec.push_back(rand() / (float) RAND_MAX * fy);
-    vyvec[id] = rand() / (float) RAND_MAX * fy;
+    vyvec[id] = id / (float) RAND_MAX * fy;
     // Set velocity z-component.
-    // vzvec.push_back(rand() / (float) RAND_MAX * fz);
-    vzvec[id] = rand() / (float) RAND_MAX * fz;
+    vzvec[id] = id / (float) RAND_MAX * fz;
 
     // Correct starting x position.
     if (pxvec[id] - radius <= 0) {
