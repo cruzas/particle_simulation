@@ -82,11 +82,7 @@ main(int argc, char *argv[])
     return -1;
   }
 
-  // double avg_cpu_time_used = 0;
-  struct timespec t1;
-  struct timespec t2;
-
-  double avg_cpu_time = 0;
+  auto avg_cpu_time = 0;
 
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
@@ -96,13 +92,13 @@ main(int argc, char *argv[])
     string filename ("positions_" + to_string(cycle) + ".vtk");
 
     // Call function to update particle details and time it.
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t1);
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
     update_particles();
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t2);
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
-    avg_cpu_time += t2.tv_nsec-t1.tv_nsec ;
+    avg_cpu_time += duration_cast<nanoseconds>( t2 - t1 ).count();
 
     if (!write_all_particle_details_to_file(filename)) {
       cerr << "Could not write file: " << filename << "\n";
@@ -112,8 +108,7 @@ main(int argc, char *argv[])
 
   // Calculate average duration.
   avg_cpu_time /= nCycles;
-  cout << "avg_cpu_time (ns)=" << avg_cpu_time << "\n";
-
+  cout << "avg_cpu_time for update_particles() in ns=" << avg_cpu_time << "\n";
 
   delete [] pxvec;
   delete [] pyvec;
