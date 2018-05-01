@@ -184,7 +184,7 @@ Furthermore, an attempt has been made at simulating realistic particle interacti
 
 %-------------------------------------------------------------------------------
 \begin{frame}[fragile]{Parallelization methods}
-	Preliminary benchmarks made for comparing execution time of \texttt{update\_particles()} function using serial version and paralle version (OpenACC).
+	Preliminary benchmarks made for comparing execution time of \texttt{update\_particles()} function using serial version and parallel version (OpenACC).
 \end{frame}
 %-------------------------------------------------------------------------------
 
@@ -197,6 +197,66 @@ Furthermore, an attempt has been made at simulating realistic particle interacti
 		\caption{Matrix--matrix multiplication: execution time comparison.}
 	\end{figure}
 	%
+\end{frame}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{frame}[fragile]{Benchmarks}
+% Performance comparison
+\begin{center}
+\begin{tikzpicture}
+
+% f(x)
+\begin{axis}[
+width=0.53\linewidth,
+at={(0.0in,0.0in)},
+separate axis lines,
+every outer x axis line/.append style={black},
+every x tick label/.append style={font=\footnotesize},
+every outer y axis line/.append style={black},
+every y tick label/.append style={font=\footnotesize},
+xtick pos=left,
+ytick pos=left,
+xticklabel style={font=\footnotesize},
+yticklabel style={font=\footnotesize},
+yminorticks=true,
+xmin=1,
+xmax=6,
+ymin=0,
+ymax=10000000,
+xlabel={log(number of particles)},
+xtick={1,2,3,4,5,6},
+ylabel={Execution time (nanoseconds)},
+label style={font=\footnotesize},
+axis background/.style={fill=none},
+legend style={at={(0,0)},legend cell align=left,align=left,draw=none,fill=none,font=\footnotesize},
+legend entries={Serial,
+	OpenACC},
+legend pos=north west
+]
+
+\addlegendimage{black}
+\addlegendimage{mycolor3}
+
+\addplot[
+color=black, line width=1.5pt,mark size=1.0pt,mark=square
+]
+coordinates {
+(1,1241.21)(2,4739.75)(3,36627.6)(4,284549)(5,2742173)(6,5685342)
+};
+\addplot[
+color=mycolor3, line width=1.5pt,mark size=1.0pt,mark=square
+]
+coordinates {
+(1,139925)(2,153380)(3,153689 )(4,255065 )(5,1037473)(6,9572726)
+};
+
+\end{axis}
+%
+
+\end{tikzpicture}\\
+\end{center}
+%
 \end{frame}
 %-------------------------------------------------------------------------------
 
