@@ -162,23 +162,30 @@ init_particles()
    * same second).*/
   srand(time(0));
 
+// Create vector of random numbers.
+// REVIEW: Do fix this. This is only done for now since we can't use rand() call in OpenACC.
+int * randnums = new int[n*6];
+for (int i = 0; i < n*6; ++i) {
+  randnums[i] = rand();
+}
+
   // Go through all particles and initialize their details at random.
 //#pragma acc kernels
 #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n])
+copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) copy(randnums[0:n*6])
   for (int id = 0; id < n; ++id) {
     // Set x position.
-    pxvec[id] = (float) (id % DEFAULT_WIDTH);
+    pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
     // Set y position.
-    pyvec[id] = (float) (id % DEFAULT_HEIGHT);
+    pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
     // Set z position.
-    pzvec[id] = (float) (id % DEFAULT_DEPTH);
+    pzvec[id] = (float) (randnums[id*6 + 2] % DEFAULT_DEPTH);
     // Set velocity x-component.
-    vxvec[id] = id / (float) RAND_MAX * fx;
+    vxvec[id] = randnums[id*6 + 3] / (float) RAND_MAX * fx;
     // Set velocity y-component.
-    vyvec[id] = id / (float) RAND_MAX * fy;
+    vyvec[id] = randnums[id*6 + 4] / (float) RAND_MAX * fy;
     // Set velocity z-component.
-    vzvec[id] = id / (float) RAND_MAX * fz;
+    vzvec[id] = randnums[id*6 + 5] / (float) RAND_MAX * fz;
 
     // Correct starting x position.
     if (pxvec[id] - radius <= 0) {
