@@ -21,9 +21,9 @@
 using namespace std;
 using namespace std::chrono; // For timing.
 
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 800
-#define DEFAULT_DEPTH 800
+#define DEFAULT_WIDTH 1600
+#define DEFAULT_HEIGHT 1600
+#define DEFAULT_DEPTH 1600
 
 #define DEBUGGING 1
 #undef DEBUGGING
