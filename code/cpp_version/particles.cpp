@@ -108,6 +108,7 @@ main(int argc, char *argv[])
 
   // Calculate average duration.
   avg_cpu_time /= nCycles;
+  cout << "dt in s" << << "\n";
   cout << "avg_cpu_time for update_particles() in ns=" << avg_cpu_time << "\n";
 
   delete [] pxvec;
@@ -304,7 +305,10 @@ write_all_particle_details_to_file(string filename)
   if (myfile.is_open()) {
 
     myfile << "# vtk DataFile Version 1.0\n";
+
+    // TODO: fix this to say it describes 3D position data.
     myfile << "3D triangulation data\n";
+
     myfile << "ASCII\n\n";
 
     myfile << "DATASET POLYDATA\n";
