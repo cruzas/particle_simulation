@@ -35,15 +35,15 @@ static const float scale_x = DEFAULT_WIDTH;
 static const float scale_y = DEFAULT_HEIGHT;
 static const float scale_mass = 1.0e6;
 static const float G = 6.67384e-11;
+static const float eps = 1.0e-6;
 
 static int width;         // Width of box containing particles.
 static int height;        // Height of box containing particles.
 static int depth;         // Depth of box containing particles.
 static int n;             // Number of particles.
 static float radius;      // Radius of the particles, in pixels.
-static float delta;       // Time, in seconds, for inter-frame interval.
+static float delta_t;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
-static float g;           // Gravitational factor (in y direction).
 
 static float * pxvec;      // Vector of particle x positions.
 static float * pyvec;      // Vector of particle y positions.
@@ -73,7 +73,7 @@ print_usage()
        << "[n=num_particles] "
        << "[trace=shading_factor_trace] "
        << "[radius=particle_radius] "
-       << "[delta=inter_frame_interval_in_seconds] "
+       << "[delta_t=inter_frame_interval_in_seconds] "
        << "[total_time_interval=total_time_in_seconds]\n";
 }
 
@@ -90,7 +90,7 @@ main(int argc, char *argv[])
 
   // Calculate number of loop cycles to be performed given a total time interval
   // and time per frame.
-  int nCycles = total_time_interval / delta;
+  int nCycles = total_time_interval / delta_t;
 
   for (int cycle = 0; cycle < nCycles; ++cycle) {
     string filename ("positions_" + to_string(cycle) + ".vtk");
@@ -121,6 +121,12 @@ main(int argc, char *argv[])
   delete [] vxvec;
   delete [] vyvec;
   delete [] vzvec;
+
+  delete [] axvec;
+  delete [] ayvec;
+  delete [] azvec;
+
+  delete [] massvec;
 
   return 0;
 }
@@ -171,8 +177,9 @@ for (int i = 0; i < n*6; ++i) {
 
 // Go through all particles and initialize their details.
 #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) copy(axvec[0:n]) \
-copy(ayvec[0:n]) copy(azvec[0:n]) copy(massvec[0:n]) copy(randnums[0:n*6])
+copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) \
+copy(axvec[0:n]) copy(ayvec[0:n]) copy(azvec[0:n]) \
+copy(massvec[0:n]) copy(randnums[0:n*6])
   for (int id = 0; id < n; ++id) {
     // Set x, y, and z positions, respectively.
     pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
@@ -231,62 +238,79 @@ copy(ayvec[0:n]) copy(azvec[0:n]) copy(massvec[0:n]) copy(randnums[0:n*6])
 int
 update_particles()
 {
-  // Loop through all particles
-#pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n])
-for (int id = 0; id < n; ++id) {
-    float px = pxvec[id];  // x position.
-    float py = pyvec[id];  // y position.
-    float pz = pzvec[id];  // z position.
-    float vx = vxvec[id];  // velocity x-component.
-    float vy = vyvec[id];  // velocity y-component.
-    float vz = vzvec[id];  // velocity z-component.
+  #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
+  copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) \
+  copy(axvec[0:n]) copy(ayvec[0:n]) copy(azvec[0:n]) \
+  copy(massvec[0:n])
+  for(int i = 0; i < n; ++i) {
+    float xi = pxvec[i];
+    float yi = pyvec[i];
+    float mi = massvec[i];
 
-    // Set new x direction based on horizontal collision with wall.
-    if (px + radius >= width || px - radius <= 0) {
-      vx = vx * -1;
+    axvec[i] = 0.0;
+    ayvec[i] = 0.0;
+
+    // Update acceleration.
+    for(int j = 0; j < n; ++j) {
+      float xj = pxvec[j];
+      float yj = pyvec[j];
+      float mj = massvec[j];
+
+      float dx = xj - xi;
+      float dy = yj - yi;
+      float d = sqrt(dx*dx + dy*dy) + eps;
+
+      float f = G * mi * mj / (d*d);
+      float fx = f * (dx/d);
+      float fy = f * (dy/d);
+
+      axvec[i] += fx / mi;
+      ayvec[i] += fy / mi;
     }
 
-    // Set new y direction based on vertical collision with wall.
-    if (py - radius <= 0 || py + radius >= height) {
-      vy = vy * -1;
-    }
+    // // Set new x direction based on horizontal collision with wall.
+    // if (pxvec[i] + radius >= width || pxvec[i] - radius <= 0) {
+    //   vxvec[i] = vxvec[i] * -1;
+    // }
+    //
+    // // Set new y direction based on vertical collision with wall.
+    // if (pyvec[i] - radius <= 0 || pyvec[i] + radius >= height) {
+    //   vyvec[i] = vyvec[i] * -1;
+    // }
+    //
+    // // Set new z direction based on depth collision with wall.
+    // if (pzvec[i] + radius >= depth || pzvec[i] - radius <= 0) {
+    //   vzvec[i] = vzvec[i] * -1;
+    // }
 
-    // Set new z direction based on depth collision with wall.
-    if (pz + radius >= depth || pz - radius <= 0) {
-      vz = vz * -1;
-    }
+    // Update velocity.
+    vxvec[i] += axvec[i]*delta_t;
+    vyvec[i] += ayvec[i]*delta_t;
 
-    // Update particle position.
-    pxvec[id] = px + (vx*delta);
-    pyvec[id] = py - (vy*delta) - (0.5 * g * delta * delta);
-    pzvec[id] = pz + (vz*delta);
+    // Update position.
+    pxvec[i] += vxvec[i]*delta_t;
+    pyvec[i] += vyvec[i]*delta_t;
 
-    // Update velocity components.
-    vxvec[id] = vx;  // vx only as acceleration in x-direction is 0.
-    vyvec[id] = vy + 0.5*(g)*delta;
-    vzvec[id] = vz; // vz only as acceleration in z-direction is 0.
-
-    // Correct x position in case updated position goes past wall.
-    if (pxvec[id] - radius <= 0) {
-      pxvec[id] = radius;
-    } else if (pxvec[id] + radius >= height) {
-      pxvec[id] = width - radius;
-    }
-
-    // Correct y position in case updated position goes past wall.
-    if (pyvec[id] - radius <= 0) {
-      pyvec[id] = radius;
-    } else if (pyvec[id] + radius >= height) {
-      pyvec[id] = height - radius;
-    }
-
-    // Correct z position in case updated position goes past wall.
-    if (pzvec[id] - radius <= 0) {
-      pzvec[id] = radius;
-    } else if (pzvec[id] + radius >= depth) {
-      pzvec[id] = depth - radius;
-    }
+    // // Correct x position in case updated position goes past wall.
+    // if (pxvec[i] - radius <= 0) {
+    //   pxvec[i] = radius;
+    // } else if (pxvec[i] + radius >= height) {
+    //   pxvec[i] = width - radius;
+    // }
+    //
+    // // Correct y position in case updated position goes past wall.
+    // if (pyvec[i] - radius <= 0) {
+    //   pyvec[i] = radius;
+    // } else if (pyvec[i] + radius >= height) {
+    //   pyvec[i] = height - radius;
+    // }
+    //
+    // // Correct z position in case updated position goes past wall.
+    // if (pzvec[i] - radius <= 0) {
+    //   pzvec[i] = radius;
+    // } else if (pzvec[i] + radius >= depth) {
+    //   pzvec[i] = depth - radius;
+    // }
   }
 
   return 1;
@@ -353,10 +377,8 @@ init_params(int argc, char *argv[])
   depth = DEFAULT_DEPTH;    // Depth of box containing particles.
   n = 5;                    // Number of particles.
   radius = 5;               // Radius of the particles, in pixels.
-  delta = 1.0;              // Time, in seconds, for inter-frame interval.
+  delta_t = 1.0;              // Time, in seconds, for inter-frame interval.
   total_time_interval = 10; // Time, in seconds, for total time interval.
-  g = -9.8;                 // Gravitational factor (in y direction).
-
 
   // Read and process command-line arguments.
   for (int i = 1; i < argc; ++i) {
@@ -372,9 +394,8 @@ init_params(int argc, char *argv[])
   printf("height=%d\n", height);
   printf("n=%d\n", n);
   printf("radius=%f\n", radius);
-  printf("delta=%f\n", delta);
+  printf("delta_t=%f\n", delta_t);
   printf("total_time_interval=%d\n", total_time_interval);
-  printf("g: %f\n", g);
   #endif
 
   return 1;
@@ -400,8 +421,8 @@ process_arg(char *arg)
   else if (strstr(arg, "radius="))
   return sscanf(arg, "radius=%f", &radius) == 1;
 
-  else if (strstr(arg, "delta="))
-  return sscanf(arg, "delta=%f", &delta) == 1;
+  else if (strstr(arg, "delta_t="))
+  return sscanf(arg, "delta_t=%f", &delta_t) == 1;
 
   else if (strstr(arg, "total_time_interval="))
   return sscanf(arg, "total_time_interval=%d", &total_time_interval) == 1;
