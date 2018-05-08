@@ -182,9 +182,11 @@ init_particles()
   copy(massvec[0:n]) copy(randnums[0:n*6])
   for (int id = 0; id < n; ++id) {
     // Set x, y, and z positions, respectively.
-    pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
-    pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
+    // pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
+    // pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
     // pzvec[id] = (float) (randnums[id*6 + 2] % DEFAULT_DEPTH);
+    pxvec[id] = randnums[id*6] - 0.5;
+    pyvec[id] = randnums[id*6 + 1] - 0.5;
     pzvec[id] = 0.0;
 
     pxvec[id] *= scale_x;
@@ -204,27 +206,6 @@ init_particles()
 
     // Set particle mass.
     massvec[id] = randnums[id*6] * scale_mass;
-
-    // // Correct starting x position.
-    // if (pxvec[id] - radius <= 0) {
-    //   pxvec[id] = radius;
-    // } else if (pxvec[id] + radius >= DEFAULT_WIDTH) {
-    //   pxvec[id] = DEFAULT_WIDTH - radius;
-    // }
-    //
-    // // Correct starting y position.
-    // if (pyvec[id] - radius <= 0) {
-    //   pyvec[id] = radius;
-    // } else if (pyvec[id] + radius >= DEFAULT_HEIGHT) {
-    //   pyvec[id] = DEFAULT_HEIGHT - radius;
-    // }
-
-    // Correct starting z position.
-    // if (pzvec[id] - radius <= 0) {
-    //   pzvec[id] = radius;
-    // } else if (pzvec[id] + radius >= DEFAULT_DEPTH) {
-    //   pzvec[id] = DEFAULT_DEPTH - radius;
-    // }
   }
 
   return 1;
@@ -268,21 +249,6 @@ update_particles()
       ayvec[i] += fy / mi;
     }
 
-    // // Set new x direction based on horizontal collision with wall.
-    // if (pxvec[i] + radius >= width || pxvec[i] - radius <= 0) {
-    //   vxvec[i] = vxvec[i] * -1;
-    // }
-    //
-    // // Set new y direction based on vertical collision with wall.
-    // if (pyvec[i] - radius <= 0 || pyvec[i] + radius >= height) {
-    //   vyvec[i] = vyvec[i] * -1;
-    // }
-    //
-    // // Set new z direction based on depth collision with wall.
-    // if (pzvec[i] + radius >= depth || pzvec[i] - radius <= 0) {
-    //   vzvec[i] = vzvec[i] * -1;
-    // }
-
     // Update velocity.
     vxvec[i] += axvec[i]*delta_t;
     vyvec[i] += ayvec[i]*delta_t;
@@ -290,27 +256,6 @@ update_particles()
     // Update position.
     pxvec[i] += vxvec[i]*delta_t;
     pyvec[i] += vyvec[i]*delta_t;
-
-    // // Correct x position in case updated position goes past wall.
-    // if (pxvec[i] - radius <= 0) {
-    //   pxvec[i] = radius;
-    // } else if (pxvec[i] + radius >= height) {
-    //   pxvec[i] = width - radius;
-    // }
-    //
-    // // Correct y position in case updated position goes past wall.
-    // if (pyvec[i] - radius <= 0) {
-    //   pyvec[i] = radius;
-    // } else if (pyvec[i] + radius >= height) {
-    //   pyvec[i] = height - radius;
-    // }
-    //
-    // // Correct z position in case updated position goes past wall.
-    // if (pzvec[i] - radius <= 0) {
-    //   pzvec[i] = radius;
-    // } else if (pzvec[i] + radius >= depth) {
-    //   pzvec[i] = depth - radius;
-    // }
   }
 
   return 1;
