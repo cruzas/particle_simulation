@@ -29,26 +29,35 @@ using namespace std::chrono; // For timing.
 #undef DEBUGGING
 
 static const string PDPATH = "./particle_positions/";  // Path to write files to.
-static int use_openacc;     // Whether we use OpenACC or not.
+static const float center_x = DEFAULT_WIDTH/2;
+static const float center_y = DEFAULT_HEIGHT/2;
+static const float scale_x = DEFAULT_WIDTH;
+static const float scale_y = DEFAULT_HEIGHT;
+static const float scale_mass = 1.0e6;
+static const float G = 6.67384e-11;
+
 static int width;         // Width of box containing particles.
 static int height;        // Height of box containing particles.
 static int depth;         // Depth of box containing particles.
 static int n;             // Number of particles.
-static float fx;          // Horizontal component of the force field.
-static float fy;          // Vertical component of the force field.
-static float fz;          // Depth component of the force field.
 static float radius;      // Radius of the particles, in pixels.
 static float delta;       // Time, in seconds, for inter-frame interval.
 static int total_time_interval;    // Time, in seconds, for total time interval.
 static float g;           // Gravitational factor (in y direction).
 
-float * pxvec;      // Vector of particle x positions.
-float * pyvec;      // Vector of particle y positions.
-float * pzvec;      // Vector of particle z positions.
+static float * pxvec;      // Vector of particle x positions.
+static float * pyvec;      // Vector of particle y positions.
+static float * pzvec;      // Vector of particle z positions.
 
-float * vxvec;      // Vector of particle velocity x components.
-float * vyvec;      // Vectory of particle velocity y components.
-float * vzvec;      // Vector of particle velocity z components.
+static float * vxvec;      // Vector of particle velocity x components.
+static float * vyvec;      // Vector of particle velocity y components.
+static float * vzvec;      // Vector of particle velocity z components.
+
+static float * axvec;      // Vector of particle acceleration x components.
+static float * ayvec;      // Vector of particle acceleration y components.
+static float * azvec;      // Vector of particle acceleration z components.
+
+static float * massvec;    // Vector of particle masses.
 
 void print_all_particle_details();
 int write_all_particle_details_to_file(string filename);
@@ -59,19 +68,14 @@ int write_all_particle_details_to_file(string filename);
 void
 print_usage()
 {
-  cerr << "Usage: << [use_openacc=1 or 0] "
-       << "[width=box_width] "
+  cerr << "Usage: [width=box_width] "
        << "[height=box_height] "
        << "[n=num_particles] "
-       << "[fx=forcefield_x] "
-       << "[fy=forcefield_y] "
-       << "[fz=forcefield_z]"
        << "[trace=shading_factor_trace] "
        << "[radius=particle_radius] "
        << "[delta=inter_frame_interval_in_seconds] "
        << "[total_time_interval=total_time_in_seconds]\n";
 }
-
 
 // main() is where program execution begins.
 int
@@ -108,7 +112,6 @@ main(int argc, char *argv[])
 
   // Calculate average duration.
   avg_cpu_time /= nCycles;
-  cout << "dt in s" << << "\n";
   cout << "avg_cpu_time for update_particles() in ns=" << avg_cpu_time << "\n";
 
   delete [] pxvec;
@@ -130,21 +133,22 @@ int
 init_particles()
 {
   // Allocate space for particle positions.
-  // pxvec.reserve(n);
-  // pyvec.reserve(n);
-  // pzvec.reserve(n);
-
   pxvec = new float[n];
   pyvec = new float[n];
   pzvec = new float[n];
 
   // Allocate space for particle velocities.
-  // vxvec.reserve(n);
-  // vyvec.reserve(n);
-  // vzvec.reserve(n);
   vxvec = new float[n];
   vyvec = new float[n];
   vzvec = new float[n];
+
+  // Allocate space for particle accelerations.
+  axvec = new float[n];
+  ayvec = new float[n];
+  azvec = new float[n];
+
+  // Allocate space for particle masses.
+  massvec = new float[n];
 
   /* The srand() function sets its argument seed as the seed for a new
    * sequence of pseudo-random numbers to be returned by rand().  These
@@ -165,23 +169,34 @@ for (int i = 0; i < n*6; ++i) {
   randnums[i] = rand();
 }
 
-  // Go through all particles and initialize their details at random.
-//#pragma acc kernels
+// Go through all particles and initialize their details.
 #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) copy(randnums[0:n*6])
+copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) copy(axvec[0:n]) \
+copy(ayvec[0:n]) copy(azvec[0:n]) copy(massvec[0:n]) copy(randnums[0:n*6])
   for (int id = 0; id < n; ++id) {
-    // Set x position.
+    // Set x, y, and z positions, respectively.
     pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
-    // Set y position.
     pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
-    // Set z position.
-    pzvec[id] = (float) (randnums[id*6 + 2] % DEFAULT_DEPTH);
-    // Set velocity x-component.
-    vxvec[id] = randnums[id*6 + 3] / (float) RAND_MAX * fx;
-    // Set velocity y-component.
-    vyvec[id] = randnums[id*6 + 4] / (float) RAND_MAX * fy;
-    // Set velocity z-component.
-    vzvec[id] = randnums[id*6 + 5] / (float) RAND_MAX * fz;
+    // pzvec[id] = (float) (randnums[id*6 + 2] % DEFAULT_DEPTH);
+    pzvec[id] = 0.0;
+
+    pxvec[id] *= scale_x;
+    pyvec[id] *= scale_y;
+    pxvec[id] += center_x;
+    pyvec[id] += center_y;
+
+    // Set velocity x,y, and z components, respectively.
+    vxvec[id] = 0.0;
+    vyvec[id] = 0.0;
+    vzvec[id] = 0.0;
+
+    // Set acceleration x,y, and z components, respectively.
+    axvec[id] = 0.0;
+    ayvec[id] = 0.0;
+    azvec[id] = 0.0;
+
+    // Set particle mass.
+    massvec[id] = randnums[id*6] * scale_mass;
 
     // Correct starting x position.
     if (pxvec[id] - radius <= 0) {
@@ -333,15 +348,10 @@ write_all_particle_details_to_file(string filename)
 int
 init_params(int argc, char *argv[])
 {
-
-  use_openacc = 0;          // By default, do not use OpenACC.
   width = DEFAULT_WIDTH;    // Width of box containing particles.
   height = DEFAULT_HEIGHT;  // Height of box containing particles.
   depth = DEFAULT_DEPTH;    // Depth of box containing particles.
   n = 5;                    // Number of particles.
-  fx = 50;                  // Horizontal component of the force field.
-  fy = 50;                  // Vertical component of the force field.
-  fz = 50;                  // Depth component of the force field.
   radius = 5;               // Radius of the particles, in pixels.
   delta = 1.0;              // Time, in seconds, for inter-frame interval.
   total_time_interval = 10; // Time, in seconds, for total time interval.
@@ -358,13 +368,9 @@ init_params(int argc, char *argv[])
   }
 
   #ifdef DEBUGGING
-  printf("use_openacc=%d\n", use_openacc);
   printf("width=%d\n", width);
   printf("height=%d\n", height);
   printf("n=%d\n", n);
-  printf("fx=%f\n", fx);
-  printf("fy=%f\n", fy);
-  printf("fz=%f\n", fz);
   printf("radius=%f\n", radius);
   printf("delta=%f\n", delta);
   printf("total_time_interval=%d\n", total_time_interval);
@@ -382,10 +388,7 @@ init_params(int argc, char *argv[])
 int
 process_arg(char *arg)
 {
-  if (strstr(arg, "use_openacc="))
-  return sscanf(arg, "use_openacc=%d", &use_openacc) == 1;
-
-  else if (strstr(arg, "width="))
+  if (strstr(arg, "width="))
   return sscanf(arg, "width=%d", &width) == 1;
 
   else if (strstr(arg, "height="))
@@ -393,15 +396,6 @@ process_arg(char *arg)
 
   else if (strstr(arg, "n="))
   return sscanf(arg, "n=%d", &n) == 1;
-
-  else if (strstr(arg, "fx="))
-  return sscanf(arg, "fx=%f", &fx) == 1;
-
-  else if (strstr(arg, "fy="))
-  return sscanf(arg, "fy=%f", &fy) == 1;
-
-  else if (strstr(arg, "fz="))
-  return sscanf(arg, "fz=%f", &fy) == 1;
 
   else if (strstr(arg, "radius="))
   return sscanf(arg, "radius=%f", &radius) == 1;
