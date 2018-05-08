@@ -100,6 +100,8 @@ main(int argc, char *argv[])
     update_particles();
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
+    // print_all_particle_details();
+
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
     avg_cpu_time += duration_cast<nanoseconds>( t2 - t1 ).count();
@@ -185,8 +187,8 @@ init_particles()
     // pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
     // pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
     // pzvec[id] = (float) (randnums[id*6 + 2] % DEFAULT_DEPTH);
-    pxvec[id] = randnums[id*6] - 0.5;
-    pyvec[id] = randnums[id*6 + 1] - 0.5;
+    pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
+    pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
     pzvec[id] = 0.0;
 
     pxvec[id] *= scale_x;
