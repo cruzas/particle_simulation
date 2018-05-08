@@ -21,8 +21,8 @@
 using namespace std;
 using namespace std::chrono; // For timing.
 
-#define DEFAULT_WIDTH 1600
-#define DEFAULT_HEIGHT 1600
+#define DEFAULT_WIDTH 1024
+#define DEFAULT_HEIGHT 512
 #define DEFAULT_DEPTH 1600
 
 #define DEBUGGING 1
@@ -35,7 +35,7 @@ static const float scale_x = DEFAULT_WIDTH;
 static const float scale_y = DEFAULT_HEIGHT;
 static const float scale_mass = 1.0e6;
 static const float G = 6.67384e-11;
-static const float eps = 1.0e-6;
+static const float eps = 1.0;
 
 static int width;         // Width of box containing particles.
 static int height;        // Height of box containing particles.
@@ -69,12 +69,12 @@ void
 print_usage()
 {
   cerr << "Usage: [width=box_width] "
-       << "[height=box_height] "
-       << "[n=num_particles] "
-       << "[trace=shading_factor_trace] "
-       << "[radius=particle_radius] "
-       << "[delta_t=inter_frame_interval_in_seconds] "
-       << "[total_time_interval=total_time_in_seconds]\n";
+  << "[height=box_height] "
+  << "[n=num_particles] "
+  << "[trace=shading_factor_trace] "
+  << "[radius=particle_radius] "
+  << "[delta_t=inter_frame_interval_in_seconds] "
+  << "[total_time_interval=total_time_in_seconds]\n";
 }
 
 // main() is where program execution begins.
@@ -157,29 +157,29 @@ init_particles()
   massvec = new float[n];
 
   /* The srand() function sets its argument seed as the seed for a new
-   * sequence of pseudo-random numbers to be returned by rand().  These
-   * sequences are repeatable by calling srand() with the same seed value.
-   *
-   *
-   * time(0) explanation from: https://stackoverflow.com/questions/4736485/srandtime0-and-random-number-generation
-   * time(0) gives the time in seconds since the Unix epoch, which is a
-   * pretty good "unpredictable" seed (you're guaranteed your seed will be the
-   * same only once, unless you start your program multiple times within the
-   * same second).*/
+  * sequence of pseudo-random numbers to be returned by rand().  These
+  * sequences are repeatable by calling srand() with the same seed value.
+  *
+  *
+  * time(0) explanation from: https://stackoverflow.com/questions/4736485/srandtime0-and-random-number-generation
+  * time(0) gives the time in seconds since the Unix epoch, which is a
+  * pretty good "unpredictable" seed (you're guaranteed your seed will be the
+  * same only once, unless you start your program multiple times within the
+  * same second).*/
   srand(time(0));
 
-// Create vector of random numbers.
-// REVIEW: Do fix this. This is only done for now since we can't use rand() call in OpenACC.
-int * randnums = new int[n*6];
-for (int i = 0; i < n*6; ++i) {
-  randnums[i] = rand();
-}
+  // Create vector of random numbers.
+  // REVIEW: Do fix this. This is only done for now since we can't use rand() call in OpenACC.
+  int * randnums = new int[n*6];
+  for (int i = 0; i < n*6; ++i) {
+    randnums[i] = rand();
+  }
 
-// Go through all particles and initialize their details.
-#pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) \
-copy(axvec[0:n]) copy(ayvec[0:n]) copy(azvec[0:n]) \
-copy(massvec[0:n]) copy(randnums[0:n*6])
+  // Go through all particles and initialize their details.
+  #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
+  copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) \
+  copy(axvec[0:n]) copy(ayvec[0:n]) copy(azvec[0:n]) \
+  copy(massvec[0:n]) copy(randnums[0:n*6])
   for (int id = 0; id < n; ++id) {
     // Set x, y, and z positions, respectively.
     pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
@@ -205,26 +205,26 @@ copy(massvec[0:n]) copy(randnums[0:n*6])
     // Set particle mass.
     massvec[id] = randnums[id*6] * scale_mass;
 
-    // Correct starting x position.
-    if (pxvec[id] - radius <= 0) {
-      pxvec[id] = radius;
-    } else if (pxvec[id] + radius >= DEFAULT_WIDTH) {
-      pxvec[id] = DEFAULT_WIDTH - radius;
-    }
-
-    // Correct starting y position.
-    if (pyvec[id] - radius <= 0) {
-      pyvec[id] = radius;
-    } else if (pyvec[id] + radius >= DEFAULT_HEIGHT) {
-      pyvec[id] = DEFAULT_HEIGHT - radius;
-    }
+    // // Correct starting x position.
+    // if (pxvec[id] - radius <= 0) {
+    //   pxvec[id] = radius;
+    // } else if (pxvec[id] + radius >= DEFAULT_WIDTH) {
+    //   pxvec[id] = DEFAULT_WIDTH - radius;
+    // }
+    //
+    // // Correct starting y position.
+    // if (pyvec[id] - radius <= 0) {
+    //   pyvec[id] = radius;
+    // } else if (pyvec[id] + radius >= DEFAULT_HEIGHT) {
+    //   pyvec[id] = DEFAULT_HEIGHT - radius;
+    // }
 
     // Correct starting z position.
-    if (pzvec[id] - radius <= 0) {
-      pzvec[id] = radius;
-    } else if (pzvec[id] + radius >= DEFAULT_DEPTH) {
-      pzvec[id] = DEFAULT_DEPTH - radius;
-    }
+    // if (pzvec[id] - radius <= 0) {
+    //   pzvec[id] = radius;
+    // } else if (pzvec[id] + radius >= DEFAULT_DEPTH) {
+    //   pzvec[id] = DEFAULT_DEPTH - radius;
+    // }
   }
 
   return 1;
@@ -328,7 +328,10 @@ print_all_particle_details()
     << "pz=" << pzvec[i] << ", "
     << "vx=" << vxvec[i] << ", "
     << "vy=" << vyvec[i] << ", "
-    << "vz=" << vzvec[i] << "\n";
+    << "vz=" << vzvec[i] << ", "
+    << "ax=" << axvec[i] << ", "
+    << "ay=" << ayvec[i] << ", "
+    << "az=" << azvec[i] << "\n";
   }
 }
 
