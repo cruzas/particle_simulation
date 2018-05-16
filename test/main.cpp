@@ -4,43 +4,49 @@
 * This program simulates particle movement in 3D space.
 */
 
+// System header files.
 #include <time.h>
-#include "utils.h"
-// #include "sim.h"
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
 #include <string>
-#include "particles.h"
 #include <math.h>
 #include <stdlib.h>
+// User defined header files.
+#include "particles.h"
+#include "utils.h"
+
+#define DEBUGGING 1
+#define DEFAULT_NPART 1000
+#define DEFAULT_NSTEPS 1000
+#define DEFAULT_WIDTH 1024
+#define DEFAULT_HEIGHT 512
+#define DEFAULT_DEPTH 512
+#define DEFAULT_DELTA_T 1e2
 
 using namespace std;
 
-int write_all_particle_details_to_file(string filename);
+static int write_all_particle_details_to_file(string filename);
 static const string PDPATH = "./particle_positions/";
-//16384
-const size_t npart = 1000;
-const size_t nsteps = 1000;
-const float size_x = 1024.0;
-const float size_y = 512.0;
-//
-const float size_z = 512.0;
-//
-const float center_x = size_x/3.0;
-const float center_y = size_y/3.0;
-//
-const float center_z = size_z/3.0;
-//
-const float scale_x = size_x;
-const float scale_y = size_y;
-//
-const float scale_z = size_z;
-//
-const float delta_t = 1.0e2;
-const float scale_mass = 1.0e6;
-const float G = 6.67384e-11;
-float dt_ms;
+
+static size_t npart = DEFAULT_NPART;
+static size_t nsteps = DEFAULT_NSTEPS;
+static float size_x = DEFAULT_WIDTH;
+static float size_y = DEFAULT_HEIGHT;
+static float size_z = DEFAULT_DEPTH;
+
+static float center_x = size_x/3.0;
+static float center_y = size_y/3.0;
+static float center_z = size_z/3.0;
+
+static float scale_x = size_x;
+static float scale_y = size_y;
+static float scale_z = size_z;
+
+static float delta_t = DEFAULT_DELTA_T;
+static float scale_mass = 1.0e6;
+static float G = 6.67384e-11;
+static float dt_ms;
 
 static float * pxvec;      // Vector of particle x positions.
 static float * pyvec;      // Vector of particle y positions.
@@ -56,14 +62,30 @@ static float * azvec;      // Vector of particle acceleration z components.
 
 static float * massvec;    // Vector of particle masses.
 
-int main() {
+/*
+* Print expected usage of this program.
+*/
+void
+print_usage()
+{
+  cerr << "Usage: [width=box_width] "
+  << "[height=box_height] "
+  << "[depth=box_depth] "
+  << "[npart=number_of_particles] "
+  << "[delta_t=inter_frame_interval_in_seconds] "
+  << "[nsteps=number_of_steps]\n";
+}
+
+int main(int argc, char *argv[]) {
+
+  // Do all necessary initializations.
+  if (!init_params(argc, argv) || !init_particles()) {
+    return -1;
+  }
 
   clock_t begin;
   clock_t end;
   float tacc = 0.0;
-
-  init_particles();
-
   for(size_t i=0; i<nsteps; i++) {
     begin = clock();
     update_particle_details();
@@ -127,7 +149,8 @@ int main() {
     return 1;
   }
 
-  void init_particles() {
+  int init_particles() {
+    // TODO: add check for proper memory allocation.
 
     // Allocate space for particle positions.
     pxvec =  new float[npart];
@@ -182,6 +205,8 @@ int main() {
       massvec[i] = randu();
       massvec[i] *= scale_mass;
     }
+
+    return 1;
   }
 
   void update_particle_details() {
@@ -229,4 +254,60 @@ int main() {
       pyvec[i] += vyvec[i]*delta_t;
       pzvec[i] += vzvec[i]*delta_t;
     }
+  }
+
+  /* Initialize default parameters.
+  * @return 1 on success, 0 on failure.*/
+  int
+  init_params(int argc, char *argv[])
+  {
+    // Read and process command-line arguments.
+    for (int i = 1; i < argc; ++i) {
+      if(!process_arg(argv[i])) {
+        cerr << "Invalid argument: " << argv[i] << "\n";
+        print_usage();
+        return 0;
+      }
+    }
+
+    #ifdef DEBUGGING
+    printf("width=%f\n", size_x);
+    printf("height=%f\n", size_y);
+    printf("depth=%f\n", size_z);
+    printf("npart=%lu\n", npart);
+    printf("delta_t=%f\n", delta_t);
+    printf("nsteps=%lu\n", nsteps);
+    #endif
+
+    return 1;
+  }
+
+
+  /*
+  * Process the given command-line parameter.
+  * @param arg The command-line parameter.
+  * @return 1 on success, 0 on error.*/
+  int
+  process_arg(char *arg)
+  {
+    if (strstr(arg, "width="))
+    return sscanf(arg, "width=%f", &size_x) == 1;
+
+    else if (strstr(arg, "height="))
+    return sscanf(arg, "height=%f", &size_y) == 1;
+
+    else if (strstr(arg, "depth="))
+    return sscanf(arg, "depth=%f", &size_z) == 1;
+
+    else if (strstr(arg, "npart="))
+    return sscanf(arg, "npart=%zu", &npart) == 1;
+
+    else if (strstr(arg, "delta_t="))
+    return sscanf(arg, "delta_t=%f", &delta_t) == 1;
+
+    else if (strstr(arg, "nsteps="))
+    return sscanf(arg, "nsteps=%zu", &nsteps) == 1;
+
+    // Return 0 if the given command-line parameter was invalid.
+    return 0;
   }
