@@ -6,7 +6,7 @@ RM=rm -f
 CPPFLAGS=-g -std=c++11 $(shell pkg-config --cflags)
 LDFLAGS = -std=c++11 -L/cluster_nfs/scratch/clutest/cluster_nfs/Data_Apps/apps/gcc/gcc-6.1.0/lib64
 
-SRCS=particles.cpp
+SRCS=particles.cpp utils.cpp
 OBJS=$(subst .cpp,.o,$(SRCS))
 
 PROGS=particles_serial particles_parallel

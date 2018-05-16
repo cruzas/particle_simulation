@@ -1,49 +1,58 @@
 /**
 * Authors: Samuel A. Cruz Alegría, Alessandra M. de Felice, Hrishikesh R. Gupta.
 *
-* This program simulates particle movement in 2D space.
+* This program simulates particle movement in 3D space.
 */
 
-#include <algorithm>
-#include <ctime>
-#include <cstring>
+// System header files.
 #include <chrono>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iostream>
-#include <cstdlib>
+#include <math.h>
 #include <stdio.h>
-#include <string.h>
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
-#include <vector>
+#include <stdlib.h>
+#include <string>
+#include <time.h>
 
+// User defined header files.
 #include "particles.h"
+#include "utils.h"
 
+// User defined macros.
+#define DEBUGGING 1
+#define DEFAULT_NPART 1000
+#define DEFAULT_NSTEPS 1000
+#define DEFAULT_WIDTH 1024
+#define DEFAULT_HEIGHT 512
+#define DEFAULT_DEPTH 512
+#define DEFAULT_DELTA_T 1e2
+
+// Namespaces.
 using namespace std;
 using namespace std::chrono; // For timing.
 
-#define DEFAULT_WIDTH 1024
-#define DEFAULT_HEIGHT 512
-#define DEFAULT_DEPTH 1600
+static int write_all_particle_details_to_file(string filename);
+static const string PDPATH = "./particle_positions/";
 
-#define DEBUGGING 1
-#undef DEBUGGING
+static size_t npart = DEFAULT_NPART;
+static size_t nsteps = DEFAULT_NSTEPS;
+static float size_x = DEFAULT_WIDTH;
+static float size_y = DEFAULT_HEIGHT;
+static float size_z = DEFAULT_DEPTH;
 
-static const string PDPATH = "./particle_positions/";  // Path to write files to.
-static const float center_x = DEFAULT_WIDTH/2;
-static const float center_y = DEFAULT_HEIGHT/2;
-static const float scale_x = DEFAULT_WIDTH;
-static const float scale_y = DEFAULT_HEIGHT;
-static const float scale_mass = 1.0e6;
-static const float G = 6.67384e-11;
-static const float eps = 1.0;
+static float center_x = size_x/3.0;
+static float center_y = size_y/3.0;
+static float center_z = size_z/3.0;
 
-static int width;         // Width of box containing particles.
-static int height;        // Height of box containing particles.
-static int depth;         // Depth of box containing particles.
-static int n;             // Number of particles.
-static float radius;      // Radius of the particles, in pixels.
-static float delta_t;       // Time, in seconds, for inter-frame interval.
-static int total_time_interval;    // Time, in seconds, for total time interval.
+static float scale_x = size_x;
+static float scale_y = size_y;
+static float scale_z = size_z;
+
+static float delta_t = DEFAULT_DELTA_T;
+static float scale_mass = 1.0e6;
+static float G = 6.67384e-11;
 
 static float * pxvec;      // Vector of particle x positions.
 static float * pyvec;      // Vector of particle y positions.
@@ -59,9 +68,6 @@ static float * azvec;      // Vector of particle acceleration z components.
 
 static float * massvec;    // Vector of particle masses.
 
-void print_all_particle_details();
-int write_all_particle_details_to_file(string filename);
-
 /*
 * Print expected usage of this program.
 */
@@ -70,42 +76,31 @@ print_usage()
 {
   cerr << "Usage: [width=box_width] "
   << "[height=box_height] "
-  << "[n=num_particles] "
-  << "[trace=shading_factor_trace] "
-  << "[radius=particle_radius] "
+  << "[depth=box_depth] "
+  << "[npart=number_of_particles] "
   << "[delta_t=inter_frame_interval_in_seconds] "
-  << "[total_time_interval=total_time_in_seconds]\n";
+  << "[nsteps=number_of_steps]\n";
 }
 
-// main() is where program execution begins.
-int
-main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+
   // Do all necessary initializations.
   if (!init_params(argc, argv) || !init_particles()) {
     return -1;
   }
 
   auto avg_cpu_time = 0;
-
-  // Calculate number of loop cycles to be performed given a total time interval
-  // and time per frame.
-  int nCycles = total_time_interval / delta_t;
-
-  for (int cycle = 0; cycle < nCycles; ++cycle) {
-    string filename ("positions_" + to_string(cycle) + ".vtk");
-
-    // Call function to update particle details and time it.
+  for(size_t i = 0; i < nsteps; i++) {
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
-    update_particles();
+    update_particle_details();
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
-
-    // print_all_particle_details();
 
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
     avg_cpu_time += duration_cast<nanoseconds>( t2 - t1 ).count();
 
+    // Write file with all particle details in current frame.
+    string filename("positions_" + to_string(i) + ".vtk");
     if (!write_all_particle_details_to_file(filename)) {
       cerr << "Could not write file: " << filename << "\n";
       return -1;
@@ -113,8 +108,7 @@ main(int argc, char *argv[])
   }
 
   // Calculate average duration.
-  avg_cpu_time /= nCycles;
-  cout << "avg_cpu_time for update_particles() in ns=" << avg_cpu_time << "\n";
+  avg_cpu_time /= nsteps;
 
   delete [] pxvec;
   delete [] pyvec;
@@ -133,160 +127,7 @@ main(int argc, char *argv[])
   return 0;
 }
 
-/*
-* Initialize all particle details.
-* @return 1 on success, 0 on error.
-*/
-int
-init_particles()
-{
-  // Allocate space for particle positions.
-  pxvec = new float[n];
-  pyvec = new float[n];
-  pzvec = new float[n];
-
-  // Allocate space for particle velocities.
-  vxvec = new float[n];
-  vyvec = new float[n];
-  vzvec = new float[n];
-
-  // Allocate space for particle accelerations.
-  axvec = new float[n];
-  ayvec = new float[n];
-  azvec = new float[n];
-
-  // Allocate space for particle masses.
-  massvec = new float[n];
-
-  /* The srand() function sets its argument seed as the seed for a new
-  * sequence of pseudo-random numbers to be returned by rand().  These
-  * sequences are repeatable by calling srand() with the same seed value.
-  *
-  *
-  * time(0) explanation from: https://stackoverflow.com/questions/4736485/srandtime0-and-random-number-generation
-  * time(0) gives the time in seconds since the Unix epoch, which is a
-  * pretty good "unpredictable" seed (you're guaranteed your seed will be the
-  * same only once, unless you start your program multiple times within the
-  * same second).*/
-  srand(time(0));
-
-  // Create vector of random numbers.
-  // REVIEW: Do fix this. This is only done for now since we can't use rand() call in OpenACC.
-  int * randnums = new int[n*6];
-  for (int i = 0; i < n*6; ++i) {
-    randnums[i] = rand();
-  }
-
-  // Go through all particles and initialize their details.
-  #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-  copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) \
-  copy(axvec[0:n]) copy(ayvec[0:n]) copy(azvec[0:n]) \
-  copy(massvec[0:n]) copy(randnums[0:n*6])
-  for (int id = 0; id < n; ++id) {
-    // Set x, y, and z positions, respectively.
-    // pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
-    // pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
-    // pzvec[id] = (float) (randnums[id*6 + 2] % DEFAULT_DEPTH);
-    pxvec[id] = (float) (randnums[id*6] % DEFAULT_WIDTH);
-    pyvec[id] = (float) (randnums[id*6 + 1] % DEFAULT_HEIGHT);
-    pzvec[id] = 0.0;
-
-    pxvec[id] *= scale_x;
-    pyvec[id] *= scale_y;
-    pxvec[id] += center_x;
-    pyvec[id] += center_y;
-
-    // Set velocity x,y, and z components, respectively.
-    vxvec[id] = 0.0;
-    vyvec[id] = 0.0;
-    vzvec[id] = 0.0;
-
-    // Set acceleration x,y, and z components, respectively.
-    axvec[id] = 0.0;
-    ayvec[id] = 0.0;
-    azvec[id] = 0.0;
-
-    // Set particle mass.
-    massvec[id] = randnums[id*6] * scale_mass;
-  }
-
-  return 1;
-}
-
-
-/*
-* Update the particle details.
-* @return 1 on success, 0 on error.
-*/
-int
-update_particles()
-{
-  #pragma acc parallel loop copy(pxvec[0:n]) copy(pyvec[0:n]) copy(pzvec[0:n]) \
-  copy(vxvec[0:n]) copy(vyvec[0:n]) copy(vzvec[0:n]) \
-  copy(axvec[0:n]) copy(ayvec[0:n]) copy(azvec[0:n]) \
-  copy(massvec[0:n])
-  for(int i = 0; i < n; ++i) {
-    float xi = pxvec[i];
-    float yi = pyvec[i];
-    float mi = massvec[i];
-
-    axvec[i] = 0.0;
-    ayvec[i] = 0.0;
-
-    // Update acceleration.
-    for(int j = 0; j < n; ++j) {
-      float xj = pxvec[j];
-      float yj = pyvec[j];
-      float mj = massvec[j];
-
-      float dx = xj - xi;
-      float dy = yj - yi;
-      float d = sqrt(dx*dx + dy*dy) + eps;
-
-      float f = G * mi * mj / (d*d);
-      float fx = f * (dx/d);
-      float fy = f * (dy/d);
-
-      axvec[i] += fx / mi;
-      ayvec[i] += fy / mi;
-    }
-
-    // Update velocity.
-    vxvec[i] += axvec[i]*delta_t;
-    vyvec[i] += ayvec[i]*delta_t;
-
-    // Update position.
-    pxvec[i] += vxvec[i]*delta_t;
-    pyvec[i] += vyvec[i]*delta_t;
-  }
-
-  return 1;
-}
-
-/* Print the details of all particles.*/
-void
-print_all_particle_details()
-{
-  for (int i = 0; i < n; ++i) {
-    cout << "particles" << i
-    << ": "
-    << "px=" << pxvec[i] << ", "
-    << "py=" << pyvec[i] << ", "
-    << "pz=" << pzvec[i] << ", "
-    << "vx=" << vxvec[i] << ", "
-    << "vy=" << vyvec[i] << ", "
-    << "vz=" << vzvec[i] << ", "
-    << "ax=" << axvec[i] << ", "
-    << "ay=" << ayvec[i] << ", "
-    << "az=" << azvec[i] << "\n";
-  }
-}
-
-/* Write the details of all particles to file with given filename.
-* The path PDPATH is used to specify where to save the file.
-* @return 1 on success, 0 on failure.*/
-int
-write_all_particle_details_to_file(string filename)
+int write_all_particle_details_to_file(string filename)
 {
   ofstream myfile;
 
@@ -294,16 +135,14 @@ write_all_particle_details_to_file(string filename)
   if (myfile.is_open()) {
 
     myfile << "# vtk DataFile Version 1.0\n";
-
-    // TODO: fix this to say it describes 3D position data.
-    myfile << "3D triangulation data\n";
+    myfile << "3D position data\n";
 
     myfile << "ASCII\n\n";
 
     myfile << "DATASET POLYDATA\n";
-    myfile << "POINTS " << n << " float\n";
+    myfile << "POINTS " << npart << " float\n";
 
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < npart; ++i) {
       // Write particle i's position to file.
       myfile << pxvec[i] << " " << pyvec[i] << " " << pzvec[i] << "\n";
     }
@@ -317,19 +156,119 @@ write_all_particle_details_to_file(string filename)
   return 1;
 }
 
+int init_particles() {
+  // TODO: add check for proper memory allocation.
+
+  // Allocate space for particle positions.
+  pxvec =  new float[npart];
+  pyvec =  new float[npart];
+  pzvec =  new float[npart];
+
+  // Allocate space for particle velocities.
+  vxvec =  new float[npart];
+  vyvec =  new float[npart];
+  vzvec =  new float[npart];
+
+  // Allocate space for particle accelerations.
+  axvec =  new float[npart];
+  ayvec =  new float[npart];
+  azvec =  new float[npart];
+
+  // Allocate space for particle masses.
+  massvec =  new float[npart];
+
+  // Initialize particle positions.
+  for(size_t i=0; i < npart; i++) {
+    pxvec[i] = randu()-0.5;
+    pyvec[i] = randu()-0.5;
+    pzvec[i] = randu()-0.5;
+
+    pxvec[i] *= scale_x;
+    pyvec[i] *= scale_y;
+    pzvec[i] *= scale_z;
+
+    pxvec[i] += center_x;
+    pyvec[i] += center_y;
+    pzvec[i] += center_z;
+
+  }
+
+  // Initialize particle velocities.
+  for(size_t i=0; i < npart; i++) {
+    vxvec[i] = 0.0;
+    vyvec[i] = 0.0;
+    vzvec[i] = 0.0;
+  }
+
+  // Initialize particle accelerations.
+  for(size_t i=0; i < npart; i++) {
+    axvec[i] = 0.0;
+    ayvec[i] = 0.0;
+    azvec[i] = 0.0;
+  }
+
+  // Initialize particle mass for all particles.
+  for(size_t i=0; i < npart; i++) {
+    massvec[i] = randu();
+    massvec[i] *= scale_mass;
+  }
+
+  return 1;
+}
+
+
+void update_particle_details() {
+  for(size_t i=0; i < npart; i++) {
+    float xi = pxvec[i];
+    float yi = pyvec[i];
+    float zi = pzvec[i];
+
+    float mi = massvec[i];
+
+    axvec[i] = 0.0;
+    ayvec[i] = 0.0;
+    azvec[i] = 0.0;
+
+    for(size_t j=0; j < npart; j++) {
+      float xj = pxvec[j];
+      float yj = pyvec[j];
+      float zj = pzvec[j];
+
+      float mj = massvec[j];
+
+      float dx = xj-xi;
+      float dy = yj-yi;
+      float dz = zj-zi;
+
+      float d = sqrt(dx*dx+dy*dy+dz*dz)+eps;
+
+      float f = G*mi*mj/(d*d);
+      float fx = f*(dx/d);
+      float fy = f*(dy/d);
+      float fz = f*(dz/d);
+
+      axvec[i] += fx/mi;
+      ayvec[i] += fy/mi;
+      azvec[i] += fz/mi;
+    }
+
+    // Update particle velocities.
+    vxvec[i] += axvec[i]*delta_t;
+    vyvec[i] += ayvec[i]*delta_t;
+    vzvec[i] += azvec[i]*delta_t;
+
+    // Update particle positions.
+    pxvec[i] += vxvec[i]*delta_t;
+    pyvec[i] += vyvec[i]*delta_t;
+    pzvec[i] += vzvec[i]*delta_t;
+  }
+}
+
 /* Initialize default parameters.
 * @return 1 on success, 0 on failure.*/
 int
 init_params(int argc, char *argv[])
 {
-  width = DEFAULT_WIDTH;    // Width of box containing particles.
-  height = DEFAULT_HEIGHT;  // Height of box containing particles.
-  depth = DEFAULT_DEPTH;    // Depth of box containing particles.
-  n = 5;                    // Number of particles.
-  radius = 5;               // Radius of the particles, in pixels.
-  delta_t = 1.0;              // Time, in seconds, for inter-frame interval.
-  total_time_interval = 10; // Time, in seconds, for total time interval.
-
   // Read and process command-line arguments.
   for (int i = 1; i < argc; ++i) {
     if(!process_arg(argv[i])) {
@@ -340,12 +279,12 @@ init_params(int argc, char *argv[])
   }
 
   #ifdef DEBUGGING
-  printf("width=%d\n", width);
-  printf("height=%d\n", height);
-  printf("n=%d\n", n);
-  printf("radius=%f\n", radius);
+  printf("width=%f\n", size_x);
+  printf("height=%f\n", size_y);
+  printf("depth=%f\n", size_z);
+  printf("npart=%lu\n", npart);
   printf("delta_t=%f\n", delta_t);
-  printf("total_time_interval=%d\n", total_time_interval);
+  printf("nsteps=%lu\n", nsteps);
   #endif
 
   return 1;
@@ -360,22 +299,22 @@ int
 process_arg(char *arg)
 {
   if (strstr(arg, "width="))
-  return sscanf(arg, "width=%d", &width) == 1;
+  return sscanf(arg, "width=%f", &size_x) == 1;
 
   else if (strstr(arg, "height="))
-  return sscanf(arg, "height=%d", &height) == 1;
+  return sscanf(arg, "height=%f", &size_y) == 1;
 
-  else if (strstr(arg, "n="))
-  return sscanf(arg, "n=%d", &n) == 1;
+  else if (strstr(arg, "depth="))
+  return sscanf(arg, "depth=%f", &size_z) == 1;
 
-  else if (strstr(arg, "radius="))
-  return sscanf(arg, "radius=%f", &radius) == 1;
+  else if (strstr(arg, "npart="))
+  return sscanf(arg, "npart=%zu", &npart) == 1;
 
   else if (strstr(arg, "delta_t="))
   return sscanf(arg, "delta_t=%f", &delta_t) == 1;
 
-  else if (strstr(arg, "total_time_interval="))
-  return sscanf(arg, "total_time_interval=%d", &total_time_interval) == 1;
+  else if (strstr(arg, "nsteps="))
+  return sscanf(arg, "nsteps=%zu", &nsteps) == 1;
 
   // Return 0 if the given command-line parameter was invalid.
   return 0;
