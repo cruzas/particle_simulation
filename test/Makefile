@@ -6,8 +6,8 @@ NVOPTS=-O3 -arch sm_20 -use_fast_math
 
 all: main
 
-main: main.o utils.o 
-	$(CC) main.o utils.o -o main \
+main: main.o utils.o
+	$(CC) main.o utils.o -o main
 		$(COPTS) $(NVLIBS)
 
 main.o: main.cpp
