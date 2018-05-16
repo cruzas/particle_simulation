@@ -1,0 +1,544 @@
+\documentclass[12pt]{article}
+
+
+\input{preamble.tex}
+
+\begin{document}
+
+%\BgThispage % activate background
+
+\fbox{
+\parbox{0.9972\boxwidth}{
+\hspace*{-.3cm}
+\begin{minipage}{0.3\textwidth}
+  \begin{tikzpicture}
+    %\node [anchor=north] (label) at (0,0)
+    %{\includegraphics[width=\textwidth]{images/eth_logo_black.pdf}};
+    \node [anchor=south] (label) at (0,0.1) {\includegraphics[width=0.75\textwidth]{figures/usi_inf.jpg}};
+%    \node [anchor=south] (label) at (0,5.5) {\includegraphics[scale=0.4]{figures_2/bern}};
+  \end{tikzpicture}
+\end{minipage}
+\hspace*{0.02\textheight}
+\begin{minipage}{0.58\textwidth}
+  \titlefont{Particle Simulations with OpenACC: Speedup and Scaling}\\[0.4cm]
+\Huge{Samuel A. Cruz Alegría, Alessandra M. de Felice, Hrishikesh R. Gupta}\\
+\end{minipage}
+}
+}
+% Information about openacc
+
+
+% ======================================== %
+% General introduction to OpenACC
+% ======================================== %
+
+\fbox{
+  \parbox{1.001\boxwidth}{
+    \setlength{\fboxsep}{0.005\textwidth}
+    \setlength{\fboxrule}{0.00125\textwidth}
+    
+    \raggedcolumns
+    \begin{multicols}{2}
+         
+    \vbox to 0.2\textheight {%
+    \newpart{\color{white}{\textbf{OpenACC}}}
+
+% \centering
+
+% \vspace{-6.0cm}
+
+\begin{minipage}{.45\columnwidth}
+\begin{itemize}
+    \item[] For a graph $\mathcal{G}(V,E)$ with $n$ vertices and $m$ edges:
+    \item Incidence matrix: $\vect{A} \in \R^{m \times n}$, 
+    \item Graph Laplacian matrix: $\vect{L} \in \R^{n \times n}$,
+    \item Vertex potentials: 
+    $
+        x_i = 
+        \left\{
+        \begin{array}{cc}
+        1 \,,\quad i \in V_k, \\
+        0 \,,\quad i \in \overline{V_k}.
+    \end{array}
+    \right.
+    $
+\end{itemize}
+
+\begin{align*}
+\displaystyle
+\vect{A}
+\scriptscriptstyle
+   &= 
+    \begin{bmatrix*}[r]
+    1 & -1 & 0 & 0 \\
+    0 & 1 & -1 & 0 \\
+    0 & 0 & 1 & -1 \\
+    0 & 1 & 0 & 1 \\
+    -1 & 0 & 0 & 1 
+  \end{bmatrix*}, 
+\displaystyle  
+\vect{L} 
+   = \vect{A}^T \vect{A} = 
+   \scriptscriptstyle
+    \begin{bmatrix*}[r]
+    2 & -1 & 0  & -1  \\
+   -1 & 3  & -1 & -1  \\
+    0 & -1 & 2  & -1 \\
+    -1 & -1  & -1 & 3 
+  \end{bmatrix*}
+\end{align*}
+
+\end{minipage}
+\hfill
+\begin{minipage}{.45\columnwidth}
+
+\begin{figure}[H]
+\includegraphics[width=0.94\columnwidth]{figures/simple_graph_small_bold.png}
+\end{figure}
+\end{minipage}
+
+\vspace{0.2cm}
+
+\begin{myblock}{}
+\centering
+Calculate an edge separator using the Fiedler eigenvector of $\mathbf{L}\in\R^{n \times n}$.
+\end{myblock}
+
+
+\begin{minipage}{.58\columnwidth}
+\centering
+\vspace{+0.5cm}
+\begin{defblock}{
+\centering
+2-Laplacian partitioning
+}
+\centering
+\begin{align*}
+ \min_{V_k \subset V} \frac{\|\vect{A}\hat{\x}\|_2^2}{\|\hat{\x}\|_2^2}
+&\approx
+  \min_{\vect{x} \in \mathbb{R}^n} \frac{\|\vect{A}\x\|_2^2}{\|\x\|_2^2}     
+    = \min_{\vect{x} \in \mathbb{R}^n} \frac{ \x^\top \vect{L}\x}{\x^\top \x} = \lambda^{(2)}_i  \\ 
+ &\subject{\ } \1^\top \x  = 0
+\end{align*}
+
+\end{defblock}
+
+\vspace{+0.5cm}
+
+\begin{defblock}{ 
+\centering
+p-Laplacian partitioning,
+}
+\centering
+\begin{align*}
+ \min_{V_k \subset V} \frac{\|\vect{A}\hat{\x}\|_p^p}{\|\hat{\x}\|_p^p}
+\approx&
+  \min_{\vect{x} \in \mathbb{R}^n} \frac{\|\vect{A}\x\|_p^p}{\|\x\|_p^p} 
+    = \min_{\x \in \R^n} \frac{ (\vect{A} \x)^\top \phi_p (\vect{A} \x) } {\x^\top \phi_p( \x)} = \lambda^{(p)}_i \\ 
+ &\subject{\ } \1^\top \phi_p(\x)  = 0
+\end{align*}
+
+\end{defblock}
+
+\end{minipage}
+\hfill
+\begin{minipage}{.42\columnwidth}
+\centering
+
+\centering
+% \vspace{-1.6cm}
+\textbf{Feasible Projection}\\
+% \vspace{+0.2cm}
+\begin{equation*}
+\widehat{\x} = \x - \frac{\1^\top\x}{n}
+\end{equation*}
+
+\vspace{+1.2cm}
+
+\centering
+\begin{align*}
+\phi_p(x_i) &= |x_i|^{p-2}x_i, \; i = 1, \ldots, n \\
+\phi_p^{-1}(x_i) &= |x_i|^{\frac{1}{p-1}} \text{sign}(x_i)    
+\end{align*}
+
+\centering
+\vspace{-0.6cm}
+\begin{align*}
+\widehat{\x}_p &=  \phi_p^{-1} \left(\phi_p(\x) - \frac{\1^\top \phi_p(\x)}{n} \right)
+\end{align*}
+
+
+\end{minipage}
+
+%\vfill
+%%% stop editing here
+\columnbreak
+} % end vbox
+
+
+% ======================================== %
+%     Examples of OpenACC
+% ======================================== %
+
+%\vspace{1cm}
+\columnbreak
+\newpart{\color{white}{\textbf{OpenACC Examples and Uses}}}
+
+
+\begin{figure}[H]
+    \centering % <-- added
+
+  \includegraphics[width=0.32\columnwidth]{figures/1354_METIS2.png}
+  \includegraphics[width=0.32\columnwidth]{figures/1354_PLAPMETIS2.png}
+  \includegraphics[width=0.32\columnwidth]{figures/1354_PLAPKaHIP2.png}
+\end{figure}
+
+\begin{center}
+\begin{table}[H]
+\scalebox{0.8}{
+% \colorbox{lightgray}{%
+  \centering
+  \renewcommand{\arraystretch}{1.4}
+\pgfplotstabletypeset[
+        columns/Case/.style={column name=Case,string type,column type=l},
+        columns/Nodes/.style={int detect,column type=r},
+        columns/Edges/.style={int detect,column type=r},
+        columns/Metis/.style={column name=\textbf{METIS},string type,column type=c},
+        columns/Metis-imbal/.style={column name=$b_r^2$(\%),string type,column type=c},
+        columns/pLapMetis/.style={column name=\textbf{p-Lap(METIS\%)}, string type,column type=c},
+        columns/pLapMetis-imbal/.style={column name=$b_r^2$(\%), string type,column type=c},
+        columns/KaHIP/.style={column name=KaHIP,string type,column type=c},
+        columns/KaHIP-imbal/.style={column name=$b_r^2$(\%),string type,column type=c},
+        columns/pLapKaHIP/.style={column name=\textbf{p-Lap(KaHIP\%)}, string type,column type=c},
+        columns/pLapKaHIP-imbal/.style={column name=$b_r^2$(\%), string type,column type=c},
+        every head row/.style={
+        before row=\toprule,after row=\midrule},
+        every last row/.style={
+        after row=\bottomrule},
+columns={Case,Nodes,Edges,Metis,Metis-imbal,pLapMetis,pLapMetis-imbal,KaHIP,KaHIP-imbal,pLapKaHIP,pLapKaHIP-imbal},
+]{Case1354.dat}
+}
+% }
+\end{table}
+\end{center}
+
+\vspace{-1.5cm}
+
+\begin{figure}[H]
+    \centering % <-- added
+  \includegraphics[width=0.4\columnwidth]{figures/6495_KaHIP.png} 
+  \hspace{1.5cm}
+  \includegraphics[width=0.4\columnwidth]{figures/6945_PLAPKaHIP.png}
+\end{figure}
+
+\begin{table}[H]
+\scalebox{0.8}{
+% \colorbox{lightgray}{%
+  \centering
+  \renewcommand{\arraystretch}{1.4}
+\pgfplotstabletypeset[
+        columns/Case/.style={column name=Case,string type,column type=l},
+        columns/Nodes/.style={int detect,column type=r},
+        columns/Edges/.style={int detect,column type=r},
+        columns/Metis/.style={column name=METIS,string type,column type=c},
+        columns/Metis-imbal/.style={column name=$b_r^2$(\%),string type,column type=c},
+        columns/pLapMetis/.style={column name=p-Lap(METIS\%), string type,column type=c},
+        columns/pLapMetis-imbal/.style={column name=$b_r^2$(\%), string type,column type=c},
+        columns/KaHIP/.style={column name=\textbf{KaHIP},string type,column type=c},
+        columns/KaHIP-imbal/.style={column name=$b_r^2$(\%),string type,column type=c},
+        columns/pLapKaHIP/.style={column name=\textbf{p-Lap(KaHIP\%)}, string type,column type=c},
+        columns/pLapKaHIP-imbal/.style={column name=$b_r^2$(\%), string type,column type=c},
+        every head row/.style={
+        before row=\toprule,after row=\midrule},
+        every last row/.style={
+        after row=\bottomrule},
+columns={Case,Nodes,Edges,Metis,Metis-imbal,pLapMetis,pLapMetis-imbal,KaHIP,KaHIP-imbal,pLapKaHIP,pLapKaHIP-imbal},
+]{Case6495.dat}
+}
+% }
+\end{table}
+  
+  
+\end{multicols}}}
+
+
+
+% ======================================== %
+%    Particle Simulations
+% ======================================== %
+
+\fbox{
+  \parbox{0.9972\boxwidth}
+  {
+    \setlength{\fboxsep}{0.005\textwidth}
+    \setlength{\fboxrule}{0.00125\textwidth}
+    
+     \raggedcolumns
+      \begin{multicols}{2}
+
+\vbox{
+
+\newpart{\color{white}{Particle Simulations}}
+
+\begin{minipage}{.49\columnwidth}
+
+
+\begin{algorithm}[H]
+\caption{$p$-Laplacian Bisection}
+{\fontsize{10}{20}\selectfont
+\begin{algorithmic}[1] 
+\Require $\x_0$ \Comment{METIS or KaHIP bisection}
+\Ensure  $\x_p^\Min$ \Comment{$p$-Laplacian bisection}
+\Function{pLaplacian}{$\vect{A}, \x_0, b^{\text{max}}, \beta, \text{max\_it}$}
+  \State $\color{purple}{\displaystyle r_c^\Min \gets \RCCut(\x_0)}$
+  \State $p=2, \quad \displaystyle \x= \x_0$
+  \For{k=0:max\_it}
+  \State  $\displaystyle p_k = {1 + e^{-\beta k/\text{max\_iters}} }$
+    \State $\x_k^{\text{min}} \gets \text{pLaplacianDescent}(\vect{A}, p_k)$ 
+  \EndFor
+  \State \Return {$\x_p^\Min$}
+  \EndFunction
+\end{algorithmic}
+}
+\end{algorithm}
+
+\end{minipage}
+\hfill
+\begin{minipage}{.49\columnwidth}
+% 
+\begin{algorithm}[H]
+\caption{$p$-Laplacian Descent}
+{\fontsize{10}{12}\selectfont
+\begin{algorithmic}[1]
+\Require $\x_0$ \Comment{approximation of the $p$-eigenvector}
+\Ensure  $\x_p^\Min$ \Comment{$p$-Laplacian bisection}
+\Function{pLaplacianDescent}{$\vect{A}, \x_0, p$}
+   	\While{not converged}
+      \State $\color{purple}{\displaystyle \x \gets \widehat{\x}_p}$
+      \State $r_c = \text{RCCut}(\x)$ 
+      \State $\color{purple}{b_r = \text{ImBal}(\x)}$
+    
+   	  \If{$r_c < r_c^\Min$ \AND $b_r < b_r^\Max$}
+        \State $\x^\Min_p \gets \x$
+        \Comment{save best solution}
+        \State $r_c^\Min \gets r_c$
+        \Comment{and minimum cut}
+      \EndIf
+      \State $\displaystyle \g  \gets \nabla f(\x)$
+      \State $\displaystyle \alpha \gets \argmin_\alpha f\left(\phi^{-1}_p \left( \x - \alpha \g \right) \right)$
+      \State $\displaystyle \x \gets \phi^{-1}_p \left( \x - \alpha \g \right)$
+	\EndWhile
+  \State \Return {$\x^\Min_p$}
+\EndFunction
+\end{algorithmic}
+} % spacing
+\end{algorithm}
+\end{minipage}
+
+\begin{itemize}
+\item Ratio Cheeger cut: $ \displaystyle
+\text{RCCut}(V_k,\overline{V}_k) = \frac{\text{cut}(V_k,\overline{V}_k)}{\min\{|V_k|,|\overline{V}_k|\}}, \;\; \text{with} \;\; \text{cut}(V_k,\overline{V}_k) = \|\vect{A}\x\|_p^p.
+$
+\item Node imbalance: $ \displaystyle
+b_r^2 = 
+\frac{ \big |  |V_2| - |\overline{V}_2| \big|}{|V|}.
+$
+\item Reduced computational complexity: $\displaystyle O(n^3) \rightarrow O(m)$. 
+\end{itemize}
+
+
+
+
+
+} % vbox
+
+
+ \columnbreak
+
+% ======================================== %
+%         Particle Simulations integrated with OpenACC - Performance results
+% ======================================== %
+
+\newpart{\color{white}{ Particle Simulations Integrated with OpenACC}}
+\vbox to 0.1999\textheight
+{
+  \raggedcolumns
+  \setlength{\columnseprule}{0.pt}
+  
+\vspace{+0.5cm}
+
+\begin{itemize}
+    \item Consistent and valid improvement over a METIS or KaHIP partition.
+    \item The level of improvement achieved depends on the structure of the graph in question and the optimality or near optimality of the original cut
+\end{itemize}
+ From a total of 186 graphs initialized with a METIS cut, improvements over 10\% were observed for 47.3\% of them, while for the 102 graphs initialized with a KaHIP partition improvements over 10\% were observed for 15.7\% of them.
+
+% \input{CollectiveMETIS.tex}
+
+% \input{CollectiveKaHIP.tex}
+
+\centering
+\vspace{+0.9cm}
+\includegraphics[width=0.96\columnwidth]{figures/concentrated_2.png}
+
+
+ 
+} % end vbox
+
+
+\end{multicols}
+   } % end parbox
+
+} % end fbox
+
+% ======================================== %
+% Parallel p-Laplacian Graph Partitioning
+% ======================================== %
+\fbox{
+  \parbox{0.9972\boxwidth}{
+    \setlength{\fboxsep}{0.005\textwidth}
+    % \setlength{\fboxsep}{0.505\textwidth}
+    \setlength{\fboxrule}{0.00125\textwidth}
+    % \setlength{\fboxrule}{0.10125\textwidth}
+    % --------------------------------------------------------------------------
+    \setlength{\columnwidth}{1.02\linewidth}
+    \newpart{\color{white}{Parallel Particle Simulations}}
+\vbox to 0.182\textheight {%
+
+%% start editing here
+
+	 \raggedcolumns
+	 
+		 	\setlength{\columnseprule}{0.pt}
+			
+   			 \begin{multicols}{3}
+
+				\vfill
+% ======================================== %
+%               Motivation - ICS and Master Programme
+% ======================================== %
+\begin{center}
+\heading{Motivation - ICS and Master Programme}
+\end{center}
+
+\begin{center}
+\includegraphics[width=0.66\columnwidth]{figures/Piz-Daint.png}    
+\end{center}
+
+The bisection of a finite-element mesh on an XC50 compute node of Piz Daint at the Swiss National Supercomputing Centre indicates that the $p$-Laplacian algorithm is suitable for parallel computation and is able to utilize the capabilities of modern computer hardware.
+
+\begin{table} [H]
+\renewcommand{\arraystretch}{1.3}
+\caption*{15,360,000 elements, 2,618,021 nodes}
+\vspace{-0.3cm}
+\scalebox{0.95}{
+\centering
+\pgfplotstabletypeset[
+        columns/CPU/.style={string type,column type=c},
+        columns/FLOPS/.style={column name=Peak FLOPS,string type,column type=c},
+        columns/MEM/.style={string type,column type=c, column name=(Peak MEM.)},
+        columns/TIME/.style={column name=Elapsed time (s),string type,column type=c},
+        every head row/.style={
+        before row=\toprule,after row=\midrule},
+        every last row/.style={
+        after row=\bottomrule},
+columns={CPU,FLOPS,MEM,TIME},
+]{Motivation.dat}
+} % scalebox
+\end{table}
+
+
+\centering
+% \begin{figure}
+% \begin{tabularx}{\textwidth}{CCC}
+%     % empty top left
+%     &   \includegraphics[width=0.33\columnwidth]{figures/Piz-Daint.png}
+%     &   
+%     % empty top right 
+%     \\
+%     % [-3ex]
+%     % \vspace{-1.8cm}
+% \includegraphics[width=0.33\columnwidth]{figures/intel-xeon.jpg}
+%     &   
+%     % empty bottom center
+%     & 
+%     % \vspace{-1.8cm}
+%     \includegraphics[width=0.33\columnwidth]{figures/nvidia_tesla.jpg}
+% \end{tabularx}
+% % \end{figure}
+
+
+%----------------------------------------------------------------------------
+\columnbreak
+
+% ======================================== %
+%               ICS Cluster
+% ======================================== %
+\begin{center}								
+\heading{ICS Cluster}  
+\end{center}
+ 
+
+
+\begin{table} [H]
+  \renewcommand{\arraystretch}{1.3}
+%   \caption*{15,360,000 elements, 2,618,021 nodes}
+  \vspace{-0.3cm}
+%   \scalebox{0.65}{
+  \centering
+\pgfplotstabletypeset[
+        columns/Method/.style={string type,column type=c},
+        columns/EdgeCut/.style={column name=edgecut,int detect,column type=r},
+        columns/PercentEdgeCut/.style={string type,column type=c, column name=(METIS\%)},
+        columns/MaxWeight/.style={column name=$\displaystyle \max_{i\le128}{\big|V^{128}_i\big|}$,int detect,column type=r},
+        columns/Imbal/.style={column name=$b_r^{128}$(\%),string type,column type=r},
+        every head row/.style={
+        before row=\toprule,after row=\midrule},
+        every last row/.style={
+        after row=\bottomrule},
+columns={Method,EdgeCut,PercentEdgeCut,MaxWeight,Imbal},
+]{Hybrid.dat}
+% }%scalebox
+\end{table}
+
+\vspace{+0.7cm}
+
+\includegraphics[width=0.99\columnwidth]{figures/hybrid}
+
+                      
+% ======================================== %
+%             Visuals and Performance
+% ======================================== %
+\columnbreak
+%----------------------------------------------------------------------------
+                                 
+\begin{center}
+ \heading{Visualisation and Performance}
+\end{center}
+The elapsed time is measured on SGI UV300 for METIS and part 1 of the hybrid method, and P100 GPUs on Piz Daint XC50 nodes. The largest finite-element mesh partitioned, consisting of 1.9 billion tetrahedra, corresponds to an application using 77\% of the Piz Daint system (4,096 compute nodes).
+ \\
+ \vspace{+1cm}
+ \includegraphics[width=0.90\columnwidth]{figures/scalability.png}
+% \includegraphics[width=0.30\textwidth]{figures_2/speed}
+
+
+ %\vfill
+%				%--------------------------------------------------------------------------
+%  \vspace{1mm}
+%\vfill
+\end{multicols}}
+
+} % end vbox
+%----------------------------------------------------------------------------
+
+}
+
+
+
+\,\, T. Simpson, D. Pasadakis, D. Kourounis, K. Fujita, T. Yamaguchi, T. Ichimura, and O. Schenk, ``Balanced graph partition refinement using the graph p-Laplacian," in {\it Proceedings of the ACM Platform for \\ Advanced Scientific Computing Conference,} ser. PASC'18, July 2018, accepted, in press. (acceptance rate: 21.5 \%).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  END
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

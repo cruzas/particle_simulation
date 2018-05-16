@@ -1,0 +1,2 @@
+Case               Nodes          Edges               Metis  Metis-imbal        KaHIP     KaHIP-imbal     pLapMetis    pLapMetis-imbal   pLapKaHIP        pLapKaHIP-imbal
+6495rte           6495             9019                35       0.0       \textbf{32}       5.4           {34 (2.9)}      0.2        \textbf{25 (21.9)}       5.9

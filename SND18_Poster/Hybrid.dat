@@ -1,0 +1,4 @@
+Method      EdgeCut      PercentEdgeCut  MaxWeight Imbal
+METIS          600450           ---       120000      0 
+p-Laplacian  558492           7.5       120939      0.78
+Hybrid         570240           5.3       120660      0.55

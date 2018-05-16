@@ -1,0 +1,320 @@
+% packages needed
+% \usepackage[english]{babel}
+\usepackage{latexsym,amssymb}
+\usepackage{xcolor}
+\usepackage[pdftex]{graphicx}
+\usepackage{amsmath,amsfonts}
+\usepackage{multicol} 
+\usepackage{pifont}
+\usepackage{geometry}
+
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\tikzset{timed/.style=dashed}
+\usetikzlibrary{shapes}
+\usetikzlibrary{calc}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{fit}
+\usetikzlibrary{patterns}
+
+\pdfminorversion=4
+
+\renewcommand{\refname}{\sf \large \textbf References}
+
+% \usepackage{enumerate}
+
+\newenvironment{thinitemize}{\itemize\addtolength{\itemsep}{-6pt}}{\enditemize}
+
+\usepackage{paralist}
+% \usepackage{algorithmic}
+% \usepackage[plain, nothing]{algorithm}
+
+\usepackage{empheq}
+\usepackage{multirow}
+\usepackage{framed}
+\usepackage{fancybox}
+\usepackage{wrapfig}
+
+% MYADDITIONS
+\usepackage{float}
+%\usepackage[caption = false]{subfig}
+\usepackage[normalem]{ulem}
+ \useunder{\uline}{\ul}{}
+ \usepackage{caption}
+\usepackage{subfig}
+\usepackage{textcomp}
+
+\usepackage{bm} % bold vector with \bm{u}
+
+\usepackage{booktabs}% http://ctan.org/pkg/booktabs
+\newcommand{\tabitem}{~~\llap{\textbullet}~~}
+
+
+\usepackage{epsf}  % read ps
+
+\newenvironment{algorithmUmg}{\begin{small}\begin{tabular}{|l|}\hline}{\\ \hline \end{tabular}\end{small}}
+
+\newcommand{\norm}[2]{\|{#1}\|_{#2}}
+
+\newcommand{\heading}[1]{\large\textsf{\textbf{#1}}}
+
+\newcommand{\dt}{\ensuremath{\Delta t}}
+ 
+% graphics extensions
+\DeclareGraphicsExtensions{.jpg,.pdf,.pdftex,.png}
+\graphicspath{{./figures/}}
+ 
+% parameters-
+\setlength{\pdfpageheight}{594mm}
+\setlength{\pdfpagewidth}{420mm}
+\setlength{\paperheight}{594mm}
+\setlength{\paperwidth}{420mm}
+\setlength{\voffset}{-.5in}
+% \setlength{\hoffset}{-1.0in}
+\setlength{\hoffset}{-0.5in}
+\setlength{\evensidemargin}{5mm}
+\setlength{\oddsidemargin}{5mm}
+\setlength{\topmargin}{0mm}
+\setlength{\headheight}{0mm}
+\setlength{\headsep}{0mm}
+\setlength{\textheight}{624mm}
+\setlength{\textwidth}{410mm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2explus2ex}
+\setlength{\fboxsep}{0.01\textwidth}
+\setlength{\fboxrule}{0.001\textwidth}
+\newlength{\boxwidth}
+\setlength{\boxwidth}{0.975\textwidth}
+\setlength{\boxwidth}{0.915\textwidth}
+\setlength{\columnsep}{1cm}
+\setlength{\columnseprule}{0.1pt}
+\setlength{\multicolsep}{0cm}
+%\setcounter{unbalance}{20}
+
+
+
+
+% font for title of poster
+\newcommand{\titlefont}[1]
+{\protect{\fontencoding{T1}\fontfamily{pag}\fontseries{b}%
+    \fontshape{n}\fontsize{1cm}{1ex}
+    \selectfont{#1}}}
+
+\newcommand{\subtitlefont}[1]
+{\protect{\fontencoding{T1}\fontfamily{pag}%\fontseries{b}%
+    \fontshape{n}\fontsize{0.9cm}{1ex}
+    \selectfont{#1}}}
+\newcommand{\idn}{\mbox{$1 \hspace{-1.0mm}  {\bf l}$}}
+
+
+% PAGE HEADINGS
+\usepackage{tcolorbox}%
+
+\newcommand{\newpart}[1]
+{
+    % \tcolorbox{colback=red!5!white,colframe=red!75!black}
+    \colorbox[rgb]{0,0,0}
+    {\makebox[0.97\columnwidth]
+    {\rule[-1.2ex]{0pt}{3.7ex}\partfont{#1}}}
+    \bigskip
+}
+% \colorbox[rgb]{1.0000, 0.9020, 0.4549}
+% \tcolorbox{colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,title=#1}
+
+
+
+% Fancy ColorBoxes
+ 
+\newtcolorbox{titlebox}[1]{colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,title=#1}
+
+
+
+
+% font for headings of pages
+\newcommand{\partfont}[1]{{\Large \textsf{\textbf{#1}}}}
+
+
+% page style
+\pagestyle{empty}
+
+% -------------------------------------------------------------------------
+\newcommand{\pmat}[1]{\begin{pmatrix}#1\end{pmatrix}} 
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\brown}[1]{\textcolor{brown}{#1}}
+\newcommand{\green}[1]{\textcolor{green}{#1}}
+\newcommand{\purple}[1]{\textcolor{purple}{#1}}
+\newcommand{\gray}[1]{\textcolor{gray}{#1}}
+
+\newcommand{\integral}[1]{\int_{t_0}^{t_N} {#1} \, dt}
+\newcommand{\fsum}[3]{\sum_{#1}^{#2}{#3}} 
+\newcommand{\pder}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\dder}[2]{\frac{d #1}{d #2}}
+
+\def \R{\bb{R}}\def \C{\bb{C}}\def \Z{\bb{Z}}\def \N{\bb{N}}
+\def \a{{\bf a}}
+\def \b{{\bf b}}
+\def \c{{\bf c}}
+\def \d{{\bf d}}
+\def \e{{\bf e}}
+\def \f{{\bf f}}
+\def \g{{\bf g}}
+\def \k{{\bf k}}
+\def \m{{\bf m}}
+\def \n{{\bf n}}
+\def \p{{\bf p}}
+\def \q{{\bf q}}
+\def \r{{\bf r}}
+\def \s{{\bf s}}
+\def \t{{\bf t}}
+\def \u{{\bf u}}
+\def \v{{\bf v}}
+\def \w{{\bf w}}
+\def \x{{\bf x}}
+\def \y{{\bf y}}
+\def \h{{\bf h}}
+\def \z{{\bf z}}
+\def \rh{{\alert{h}}}
+\def \M{{\cal M}}
+\def \F{{\cal F}}
+\def \L{{\cal L}}
+\def \R{{\bf R}}
+\def \J{{\cal J}}
+\def\0{{\bf 0}}
+\def\p{{\bf{g}}}
+\def \blambda{{\boldsymbol{\lambda}}}
+%--------------------------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\minim{\mathop{\hbox{\rm minimize}}}
+\def\minimize#1{{\displaystyle\minim_{#1}}}
+\def\subject{\mbox{\rm subject to}}
+\def\myobj{J}
+\def\problemI#1#2#3#4{%\fbox
+   {\begin{tabular*}{0.3\textwidth}
+    {@{}l@{\extracolsep{\fill}}l@{\extracolsep{6pt}}l@{\extracolsep{\fill}}c@{}}
+      #1 & $\minimize{#2}$ & $#3$ & $ $ \\[5pt]
+         & $\subject$      & $#4$ & $ $
+    \end{tabular*}}}
+
+\def\problemII#1#2#3#4#5{%\fbox
+   {\begin{tabular*}{0.3\textwidth}
+    {@{}l@{\extracolsep{\fill}}l@{\extracolsep{6pt}}l@{\extracolsep{\fill}}c@{}}
+      #1 & $\minimize{#2}$ & $#3$ & $ $ \\[5pt]
+         & $\subject$      & $#4$ & $ $ \\[5pt]
+         & & $#5$ & $ $
+    \end{tabular*}}}
+
+\def\problemIII#1#2#3#4#5#6{%\fbox
+   {\begin{tabular*}{0.3\textwidth}
+    {@{}l@{\extracolsep{\fill}}l@{\extracolsep{6pt}}l@{\extracolsep{\fill}}c@{}}
+      #1 & $\minimize{#2}$ & $#3$ & $ $ \\[5pt]
+         & $\subject$      & $#4$ & $ $ \\[5pt]
+         & & $#5$ & $ $ \\[5pt]
+         & & $#6$ & $ $ 
+    \end{tabular*}}}
+
+
+% pgfplots
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+
+% Colored tables
+\pgfplotstableset{
+  discard if equal/.style = {
+    preproc cell content/.code={
+      \ifdim##1pt=#1pt
+        \pgfkeyssetvalue{/pgfplots/table/@cell content}{}
+      \fi
+    }
+  },
+  color cells/.style = {
+    postproc cell content/.code={
+      \pgfkeyssetvalue{/pgfplots/table/@cell content}{\cellcolor{#1}##1}
+    }
+  }
+}
+
+
+
+% tabularx environment
+\usepackage{tabularx}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\usepackage{graphicx}
+
+% Colors custom
+%\definecolor{mycolor1}{HTML}{CA0020}
+%\definecolor{mycolor2}{HTML}{F4A582}
+%\definecolor{mycolor3}{HTML}{F7F7F7}
+%\definecolor{mycolor4}{HTML}{92c5de}
+%\definecolor{mycolor5}{HTML}{0571b0}
+
+%  Blocks 
+\usepackage{tcolorbox}
+
+\tcbuselibrary{skins,breakable}
+\usetikzlibrary{shadings,shadows}
+
+
+\newenvironment{myblock}[1]{%
+    \tcolorbox[beamer,%
+    noparskip,breakable,
+    colback=black!05!white,colframe=white!20!black,%
+    colbacklower=blue,%
+    title=#1]}%
+    {\endtcolorbox}
+
+\newenvironment{defblock}[1]{%
+    \tcolorbox[beamer,%
+    noparskip,breakable,
+    colback=black!05!white,colframe=white!20!black,%
+    colbacklower=blue,%
+    title=#1]}%
+    {\endtcolorbox}
+
+
+
+% Bold vector
+\newcommand{\vect}[1]{\boldsymbol{#1}} 
+
+
+% Math shortcuts
+\newcommand{\1}{\mathbf{1}}
+\def\subject{\mbox{\rm subject to}}
+\def\minim{\mathop{\hbox{\rm minimize}}}
+\def\minimize#1{{\displaystyle\minim_{#1}}}
+\DeclareMathOperator*{\argmin}{argmin}
+
+
+
+
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{colortbl}
+
+% Algorithm Pseudocode
+\usepackage{algorithm}
+%\usepackage{algorithmic}
+\usepackage{algpseudocode}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algnewcommand{\algorithmicand}{\textbf{ and }}
+\algnewcommand{\algorithmicor}{\textbf{ or }}
+\algnewcommand{\OR}{\algorithmicor}
+\algnewcommand{\AND}{\algorithmicand}
+
+
+% Min, Max, RCCut
+\def\Min{\text{min}}
+\def\Max{\text{max}}
+\def\RCCut{\text{RCCut}}
+
+
+
+
+

@@ -1,0 +1,4 @@
+CPU                FLOPS            MEM        TIME
+{Intel Xeon}       {499.2 GFLOPS}  {68 GB/s}  {1862.3 (1 core)}
+{E5-2690 v3 CPU}   ---              ---       {284.8 (12 cores)}
+{Nvidia P100 GPU}  {4.7 TFLOPS}    {732 GB/s} {28.2}    
