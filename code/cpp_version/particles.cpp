@@ -21,7 +21,7 @@
 #include "utils.h"
 
 // User defined macros.
-#define DEBUGGING 1
+// #define DEBUGGING 1
 #define DEFAULT_NPART 1000
 #define DEFAULT_NSTEPS 1000
 #define DEFAULT_WIDTH 1024
@@ -177,11 +177,21 @@ int init_particles() {
   // Allocate space for particle masses.
   massvec =  new float[npart];
 
+  // Create vector of random numbers.
+  // REVIEW: Do fix this. This is only done for now since we can't use rand() call in OpenACC.
+  float * randnums = new float[npart*4];
+  for (int i = 0; i < npart; ++i) {
+    randnums[i*4] = randu()-0.5;
+    randnums[i*4 + 1] = randu()-0.5;
+    randnums[i*4 + 2] = randu()-0.5;
+    randnums[i*4 + 3] = randu();
+  }
+
   // Initialize particle positions.
   for(size_t i=0; i < npart; i++) {
-    pxvec[i] = randu()-0.5;
-    pyvec[i] = randu()-0.5;
-    pzvec[i] = randu()-0.5;
+    pxvec[i] = randnums[i*4];
+    pyvec[i] = randnums[i*4 + 1];
+    pzvec[i] = randnums[i*4 + 2];
 
     pxvec[i] *= scale_x;
     pyvec[i] *= scale_y;
@@ -191,25 +201,18 @@ int init_particles() {
     pyvec[i] += center_y;
     pzvec[i] += center_z;
 
-  }
-
-  // Initialize particle velocities.
-  for(size_t i=0; i < npart; i++) {
+    // Initialize particle velocities.
     vxvec[i] = 0.0;
     vyvec[i] = 0.0;
     vzvec[i] = 0.0;
-  }
 
-  // Initialize particle accelerations.
-  for(size_t i=0; i < npart; i++) {
+    // Initialize particle accelerations.
     axvec[i] = 0.0;
     ayvec[i] = 0.0;
     azvec[i] = 0.0;
-  }
 
-  // Initialize particle mass for all particles.
-  for(size_t i=0; i < npart; i++) {
-    massvec[i] = randu();
+    // Initialize particle mass for all particles.
+    massvec[i] = randnums[i*4 + 3];;
     massvec[i] *= scale_mass;
   }
 

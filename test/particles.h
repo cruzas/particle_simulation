@@ -5,7 +5,6 @@
 const float eps = 1.0;
 
 extern void update_particle_details();
-
 extern int init_params(int argc, char *argv[]);
 extern int init_particles();
 extern int process_arg(char *arg);
