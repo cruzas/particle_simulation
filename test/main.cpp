@@ -176,7 +176,7 @@ int init_particles() {
   massvec =  new float[npart];
 
   // Initialize particle positions.
-  for(size_t i=0; i < npart; i++) {
+  for(size_t i = 0; i < npart; i++) {
     pxvec[i] = randu()-0.5;
     pyvec[i] = randu()-0.5;
     pzvec[i] = randu()-0.5;
@@ -192,21 +192,21 @@ int init_particles() {
   }
 
   // Initialize particle velocities.
-  for(size_t i=0; i < npart; i++) {
+  for(size_t i = 0; i < npart; i++) {
     vxvec[i] = 0.0;
     vyvec[i] = 0.0;
     vzvec[i] = 0.0;
   }
 
   // Initialize particle accelerations.
-  for(size_t i=0; i < npart; i++) {
+  for(size_t i = 0; i < npart; i++) {
     axvec[i] = 0.0;
     ayvec[i] = 0.0;
     azvec[i] = 0.0;
   }
 
   // Initialize particle mass for all particles.
-  for(size_t i=0; i < npart; i++) {
+  for(size_t i = 0; i < npart; i++) {
     massvec[i] = randu();
     massvec[i] *= scale_mass;
   }
@@ -216,7 +216,7 @@ int init_particles() {
 
 
 void update_particle_details() {
-  for(size_t i=0; i < npart; i++) {
+  for(size_t i = 0; i < npart; i++) {
     float xi = pxvec[i];
     float yi = pyvec[i];
     float zi = pzvec[i];
@@ -227,7 +227,7 @@ void update_particle_details() {
     ayvec[i] = 0.0;
     azvec[i] = 0.0;
 
-    for(size_t j=0; j < npart; j++) {
+    for(size_t j = 0; j < npart; j++) {
       float xj = pxvec[j];
       float yj = pyvec[j];
       float zj = pzvec[j];
