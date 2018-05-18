@@ -23,6 +23,7 @@ sbatch <<-_EOF
 #SBATCH --output=./output/ps_${i}.out
 #SBATCH --error=./errors/err_s_${i}.err
 #SBATCH --partition=gpu
+#SBATCH --mem=128000
 
 echo "num_particles=${i}"
 echo "delta_t=${delta_t}"
