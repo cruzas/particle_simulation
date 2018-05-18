@@ -107,8 +107,11 @@ int main(int argc, char *argv[]) {
     }
   }
 
+  #pragma acc exit data
+
   // Calculate average duration.
   avg_cpu_time /= nsteps;
+  cout << "avg_cpu_time for update_particles() in ns=" << avg_cpu_time << "\n";
 
   delete [] pxvec;
   delete [] pyvec;
@@ -180,7 +183,7 @@ int init_particles() {
   // Create vector of random numbers.
   // REVIEW: Do fix this. This is only done for now since we can't use rand() call in OpenACC.
   float * randnums = new float[npart*4];
-  for (int i = 0; i < npart; ++i) {
+  for (size_t i = 0; i < npart; ++i) {
     randnums[i*4] = randu()-0.5;
     randnums[i*4 + 1] = randu()-0.5;
     randnums[i*4 + 2] = randu()-0.5;
@@ -188,137 +191,151 @@ int init_particles() {
   }
 
   // Initialize particle positions.
-  for(size_t i=0; i < npart; i++) {
-    pxvec[i] = randnums[i*4];
-    pyvec[i] = randnums[i*4 + 1];
-    pzvec[i] = randnums[i*4 + 2];
+  #pragma acc enter data create(pxvec[0:npart], pyvec[0:npart], pzvec[0:npart], \
+    vxvec[0:npart], vyvec[0:npart], vzvec[0:npart], \
+    axvec[0:npart], ayvec[0:npart], azvec[0:npart], \
+    massvec[0:npart], randnums[0:npart*4])
+    for(size_t i=0; i < npart; ++i) {
+      pxvec[i] = randnums[i*4];
+      pyvec[i] = randnums[i*4 + 1];
+      pzvec[i] = randnums[i*4 + 2];
 
-    pxvec[i] *= scale_x;
-    pyvec[i] *= scale_y;
-    pzvec[i] *= scale_z;
+      pxvec[i] *= scale_x;
+      pyvec[i] *= scale_y;
+      pzvec[i] *= scale_z;
 
-    pxvec[i] += center_x;
-    pyvec[i] += center_y;
-    pzvec[i] += center_z;
+      pxvec[i] += center_x;
+      pyvec[i] += center_y;
+      pzvec[i] += center_z;
 
-    // Initialize particle velocities.
-    vxvec[i] = 0.0;
-    vyvec[i] = 0.0;
-    vzvec[i] = 0.0;
+      // Initialize particle velocities.
+      vxvec[i] = 0.0;
+      vyvec[i] = 0.0;
+      vzvec[i] = 0.0;
 
-    // Initialize particle accelerations.
-    axvec[i] = 0.0;
-    ayvec[i] = 0.0;
-    azvec[i] = 0.0;
+      // Initialize particle accelerations.
+      axvec[i] = 0.0;
+      ayvec[i] = 0.0;
+      azvec[i] = 0.0;
 
-    // Initialize particle mass for all particles.
-    massvec[i] = randnums[i*4 + 3];;
-    massvec[i] *= scale_mass;
-  }
-
-  return 1;
-}
-
-
-void update_particle_details() {
-  for(size_t i=0; i < npart; i++) {
-    float xi = pxvec[i];
-    float yi = pyvec[i];
-    float zi = pzvec[i];
-
-    float mi = massvec[i];
-
-    axvec[i] = 0.0;
-    ayvec[i] = 0.0;
-    azvec[i] = 0.0;
-
-    for(size_t j=0; j < npart; j++) {
-      float xj = pxvec[j];
-      float yj = pyvec[j];
-      float zj = pzvec[j];
-
-      float mj = massvec[j];
-
-      float dx = xj-xi;
-      float dy = yj-yi;
-      float dz = zj-zi;
-
-      float d = sqrt(dx*dx+dy*dy+dz*dz)+eps;
-
-      float f = G*mi*mj/(d*d);
-      float fx = f*(dx/d);
-      float fy = f*(dy/d);
-      float fz = f*(dz/d);
-
-      axvec[i] += fx/mi;
-      ayvec[i] += fy/mi;
-      azvec[i] += fz/mi;
+      // Initialize particle mass for all particles.
+      massvec[i] = randnums[i*4 + 3];;
+      massvec[i] *= scale_mass;
     }
 
-    // Update particle velocities.
-    vxvec[i] += axvec[i]*delta_t;
-    vyvec[i] += ayvec[i]*delta_t;
-    vzvec[i] += azvec[i]*delta_t;
-
-    // Update particle positions.
-    pxvec[i] += vxvec[i]*delta_t;
-    pyvec[i] += vyvec[i]*delta_t;
-    pzvec[i] += vzvec[i]*delta_t;
+    return 1;
   }
-}
 
-/* Initialize default parameters.
-* @return 1 on success, 0 on failure.*/
-int
-init_params(int argc, char *argv[])
-{
-  // Read and process command-line arguments.
-  for (int i = 1; i < argc; ++i) {
-    if(!process_arg(argv[i])) {
-      cerr << "Invalid argument: " << argv[i] << "\n";
-      print_usage();
-      return 0;
+  void update_particle_details() {
+    #pragma acc parallel loop present(pxvec,pyvec,pzvec,vxvec,vyvec,vzvec,axvec,ayvec,azvec,massvec)
+    for(size_t i = 0; i < npart; ++i) {
+      float xi = pxvec[i];
+      float yi = pyvec[i];
+      float zi = pzvec[i];
+
+      float mi = massvec[i];
+
+      axvec[i] = 0.0;
+      ayvec[i] = 0.0;
+      azvec[i] = 0.0;
+
+      for(size_t j = 0; j < npart; ++j) {
+        if (i != j) {
+          float xj = pxvec[j];
+          float yj = pyvec[j];
+          float zj = pzvec[j];
+
+          float mj = massvec[j];
+
+          float dx = xj-xi;
+          float dy = yj-yi;
+          float dz = zj-zi;
+
+          float d = sqrt(dx*dx+dy*dy+dz*dz)+eps;
+
+          float f = G*mi*mj/(d*d);
+          float fx = f*(dx/d);
+          float fy = f*(dy/d);
+          float fz = f*(dz/d);
+
+          // #pragma acc atomic
+          axvec[i] += fx/mi;
+          // #pragma acc atomic
+          ayvec[i] += fy/mi;
+          // #pragma acc atomic
+          azvec[i] += fz/mi;
+        }
+      }
     }
+
+    #pragma acc parallel loop present(pxvec,pyvec,pzvec,vxvec,vyvec,vzvec,axvec,ayvec,azvec,massvec)
+    for (size_t i = 0; i < npart; ++i) {
+      // Update particle velocities.
+      vxvec[i] += axvec[i]*delta_t;
+      vyvec[i] += ayvec[i]*delta_t;
+      vzvec[i] += azvec[i]*delta_t;
+
+      // Update particle positions.
+      pxvec[i] += vxvec[i]*delta_t;
+      pyvec[i] += vyvec[i]*delta_t;
+      pzvec[i] += vzvec[i]*delta_t;
+    }
+
+    #pragma acc update host(pxvec[0:npart], pyvec[0:npart], pzvec[0:npart])
   }
 
-  #ifdef DEBUGGING
-  printf("width=%f\n", size_x);
-  printf("height=%f\n", size_y);
-  printf("depth=%f\n", size_z);
-  printf("npart=%lu\n", npart);
-  printf("delta_t=%f\n", delta_t);
-  printf("nsteps=%lu\n", nsteps);
-  #endif
+  /* Initialize default parameters.
+  * @return 1 on success, 0 on failure.*/
+  int
+  init_params(int argc, char *argv[])
+  {
+    // Read and process command-line arguments.
+    for (size_t i = 1; i < argc; ++i) {
+      if(!process_arg(argv[i])) {
+        cerr << "Invalid argument: " << argv[i] << "\n";
+        print_usage();
+        return 0;
+      }
+    }
 
-  return 1;
-}
+    #ifdef DEBUGGING
+    printf("width=%f\n", size_x);
+    printf("height=%f\n", size_y);
+    printf("depth=%f\n", size_z);
+    printf("npart=%lu\n", npart);
+    printf("delta_t=%f\n", delta_t);
+    printf("nsteps=%lu\n", nsteps);
+    #endif
+
+    return 1;
+  }
 
 
-/*
-* Process the given command-line parameter.
-* @param arg The command-line parameter.
-* @return 1 on success, 0 on error.*/
-int
-process_arg(char *arg)
-{
-  if (strstr(arg, "width="))
-  return sscanf(arg, "width=%f", &size_x) == 1;
+  /*
+  * Process the given command-line parameter.
+  * @param arg The command-line parameter.
+  * @return 1 on success, 0 on error.*/
+  int
+  process_arg(char *arg)
+  {
+    if (strstr(arg, "width="))
+    return sscanf(arg, "width=%f", &size_x) == 1;
 
-  else if (strstr(arg, "height="))
-  return sscanf(arg, "height=%f", &size_y) == 1;
+    else if (strstr(arg, "height="))
+    return sscanf(arg, "height=%f", &size_y) == 1;
 
-  else if (strstr(arg, "depth="))
-  return sscanf(arg, "depth=%f", &size_z) == 1;
+    else if (strstr(arg, "depth="))
+    return sscanf(arg, "depth=%f", &size_z) == 1;
 
-  else if (strstr(arg, "npart="))
-  return sscanf(arg, "npart=%zu", &npart) == 1;
+    else if (strstr(arg, "npart="))
+    return sscanf(arg, "npart=%zu", &npart) == 1;
 
-  else if (strstr(arg, "delta_t="))
-  return sscanf(arg, "delta_t=%f", &delta_t) == 1;
+    else if (strstr(arg, "delta_t="))
+    return sscanf(arg, "delta_t=%f", &delta_t) == 1;
 
-  else if (strstr(arg, "nsteps="))
-  return sscanf(arg, "nsteps=%zu", &nsteps) == 1;
+    else if (strstr(arg, "nsteps="))
+    return sscanf(arg, "nsteps=%zu", &nsteps) == 1;
 
-  // Return 0 if the given command-line parameter was invalid.
-  return 0;
-}
+    // Return 0 if the given command-line parameter was invalid.
+    return 0;
+  }
