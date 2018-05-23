@@ -33,6 +33,6 @@ module load gcc/6.1.0
 module load pgi
 
 # run the experiment
-srun ./particles_serial n=10000 delta_t=$delta_t nsteps=$i
+srun ./particles_serial npart=10000 delta_t=$delta_t nsteps=$i
 _EOF
 done
