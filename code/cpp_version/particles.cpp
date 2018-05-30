@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  auto avg_cpu_time = 0;
+  double avg_cpu_time = 0;
   for(size_t i = 0; i < nsteps; i++) {
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     update_particle_details();
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 
     // Add current duration to average, to be later divided by number of cycles,
     // which is the number of times update_particles() is called.
-    avg_cpu_time += duration_cast<nanoseconds>( t2 - t1 ).count();
+    avg_cpu_time += duration_cast<milliseconds>( t2 - t1 ).count();
 
     // Write file with all particle details in current frame.
     string filename("positions_" + to_string(i) + ".vtk");
