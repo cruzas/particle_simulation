@@ -17,10 +17,10 @@
 
 \begin{document}
 
-\title{\bf Evaluating realistic tsunami simulations with {SWE} model \\ on GPU-enabled clusters}
+\title{\bf Particle Simulations with OpenACC: Speedup and Scaling}
 
 %\author{Lawrence Farinola}{1}
-\author{Juraj Kardos}{1}
+\author{Samuel A. Cruz Alegría, Alessandra M. de Felice, Hrishikesh R. Gupta}{1}
 
 \affiliation{1}{\USIINF}
 
@@ -42,9 +42,7 @@
 \maketitle
 
 \begin{abstract}
-Tsunamis are devastating natural disasters, potentially able to create a lot of damage. In order to predict such events and their behavior  fast and detailed simulations of tsunamis are required. In this paper we evaluate the ability of SWE shallow water numerical model to perform efficient and realistic tsunami simulations. We used SWE model to reproduce 2004 Great Sumatra--Andaman and 2011 T\={o}hoku tsunami.
-\vskip 1em
-Nowadays, many of the Top500 supercomputers are using GPU accelerators to enhance the peak performance. The GPU-enabled clusters Tesla-CMC and Todi Cray XK-7 were benchmarked using different number of processes and GPUs to obtain the most efficient and the most fast SWE configurations. Using all 3 available GPUs of Tesla-CMC, we observed the maximum speedup of 158x in comparison to single-core CPU version. The most efficient configuration was the one with a single GPU, achieving speedup of 58x. Performance results for ``Todi'' Cray XK-7 are also presented for larger number of compute nodes.
+The simulation of particle systems has become essential for visualizing the behaviour of relevant physical systems, ranging from simulations of molecular dynamics to simulations of colliding galaxies. The computational complexity of performing simulations grows with the number of particles in the system. Performing realistic simulations may necessitate a plethora of particles, leading to immense computational costs. Simulating such systems may thus require increasingly longer time frames. Hence, performing increasingly complex sim- ulations may become impractical for single-core simulation tools. Thus, it is essential to develop simulation tools which perform practically independent of the number of bodies used in a simulation. A possibility to reduce the time required for simulations is to distribute the workload among different parallel entities, such as different processes or threads. This paper aims to explore the efficiency and scalability of parallelization in order to improve the performance of a simulation currently run on a single core. This is achieved by incorpo- rating the OpenACC programming standard, which is a programming standard for parallel computing that utilizes a hardware accelerator, such as a GPU.
 \end{abstract}
 
 \section{Introduction}

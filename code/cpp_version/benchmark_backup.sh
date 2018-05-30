@@ -38,7 +38,7 @@ echo "num_particles" "," "time_ns" > $filename_parallel
 # TODO: Add up average times.
 for i in "${nParticles[@]}"
 do
-  avg_time=`./particles_parallel n=$i delta=0.5 total_time_interval=200 | cut -d= -f2`
+  avg_time=`./particles_parallel npart=$i delta=0.5 total_time_interval=200 | cut -d= -f2`
 
   echo $i "," $avg_time >> $filename_parallel
 

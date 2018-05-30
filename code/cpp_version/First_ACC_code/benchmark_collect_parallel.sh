@@ -6,9 +6,9 @@ declare -a nParticles=(1000000, 10000000, 100000000, 1000000000)
 pos=$(( ${#nParticles[*]} - 1 ))
 last=${nParticles[$pos]}
 
-filename_serial="benchmark_serial.txt"
+filename_parallel="benchmark_parallel.txt"
 
-echo "num_particles" "," "time_ns" > $filename_serial
+echo "num_particles" "," "time_ns" > $filename_parallel
 
 # Test with constant delta_t
 delta_t=0.5
@@ -33,6 +33,6 @@ module load gcc/6.1.0
 module load pgi
 
 # run the experiment
-srun ./particles_serial npart=$i delta_t=$delta_t nsteps=100
+srun ./particles_parallel n=$i delta=$delta_t total_time_interval=100
 _EOF
 done

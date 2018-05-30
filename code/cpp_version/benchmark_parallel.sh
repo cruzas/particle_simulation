@@ -33,6 +33,6 @@ module load gcc/6.1.0
 module load pgi
 
 # run the experiment
-srun ./particles_parallel n=$i delta_t=$delta_t nsteps=100
+srun ./particles_parallel npart=$i delta_t=$delta_t nsteps=100
 _EOF
 done
