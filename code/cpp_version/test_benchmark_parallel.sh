@@ -1,7 +1,7 @@
 #!/bin/bash
 # Bash script used to collect data on performance of particle simulation.
 
-declare -a nParticles=(1000000)
+declare -a nParticles=(1e2)
 
 pos=$(( ${#nParticles[*]} - 1 ))
 last=${nParticles[$pos]}
@@ -33,6 +33,6 @@ module load gcc/6.1.0
 module load pgi
 
 # run the experiment
-srun ./particles_parallel npart=$i delta_t=$delta_t nsteps=100
+srun ./particles_parallel npart=$i delta_t=$delta_t nsteps=1
 _EOF
 done

@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 
   // Calculate average duration.
   avg_cpu_time /= nsteps;
-  cout << "avg_cpu_time for update_particles() in ns=" << avg_cpu_time << "\n";
+  cout << "avg_cpu_time for update_particles() in ms=" << avg_cpu_time << "\n";
 
   delete [] pxvec;
   delete [] pyvec;
