@@ -1,7 +1,7 @@
 #!/bin/bash
 # Bash script used to collect data on performance of particle simulation.
 
-declare -a nParticles=(1e2)
+declare -a nParticles=(1000)
 
 pos=$(( ${#nParticles[*]} - 1 ))
 last=${nParticles[$pos]}
