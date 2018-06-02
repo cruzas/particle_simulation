@@ -1,0 +1,169 @@
+%
+% include the class file for USI-INF Technical Reports
+%
+\documentclass{usiinftr}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{slashbox}
+\usepackage{subfigure}
+
+%
+% if you want to create a cover page only (e.g. to put it in front
+% of a WORD document or the like), use the "coverpage" option
+%
+%\documentclass[coverpage]{usiinftr}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{\bf Particle Simulations with OpenACC: Speedup and Scaling}
+
+%\author{Lawrence Farinola}{1}
+\author{Samuel A. Cruz Alegr\'{i}a, Alessandra M. de Felice, Hrishikesh R. Gupta}{1}
+
+\affiliation{1}{\USIINF}
+
+%
+% put the number of your Technical Report here; in order to determine
+% the number, take the number of the most recent USI INF Technical Report
+% (on top of the list at http://www.inf.usi.ch/techreports/) and increment
+% it by one; the format is "[year]-[number]"
+%
+\TRnumber{2013-3}
+
+%
+% by default, the current month and year are used as the publication date
+% of your Technical Report; if you want to change this, then you can do it here, e.g.
+%
+%\date{February~\the\year}
+%\date{August 2011}
+
+\maketitle
+
+\begin{abstract}
+The simulation of particle systems has become essential for visualizing the behaviour of relevant physical systems, ranging from simulations of molecular dynamics to simulations of colliding galaxies. The computational complexity of performing simulations grows with the number of particles in the system. Performing realistic simulations may necessitate a plethora of particles, leading to immense computational costs. Simulating such systems may thus require increasingly longer time frames. Hence, performing increasingly complex simulations may become impractical for single-core simulation tools. Thus, it is essential to develop simulation tools which perform practically independent of the number of bodies used in a simulation. A possibility to reduce the time required for simulations is to distribute the workload among different parallel entities, such as different processes or threads. This paper aims to explore the efficiency and scalability of parallelization in order to improve the performance of a simulation currently run on a single core. This is achieved by incorporating the OpenACC programming standard, which is a programming standard for parallel computing that utilizes a hardware accelerator, such as a GPU.
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{Particle Simulations}
+%
+\begin{itemize}
+	\item What are they?
+	\item Why are they important?
+	\item How can we model this?
+	\item What does our study deal with?
+	\item What are assumptions made by our model? For instance, mention how all particles have same size.
+	\item What are the initial conditions?
+	\item PDE, Euler's method?
+	\item Large number of particles $\to$ solved in reasonable time only using parallel computation.
+	\item What do we want to evaluate? Scalability and performance?
+	\item How is the paper organized?
+\end{itemize}
+%
+
+\subsection{OpenACC}
+
+%general
+
+%What 
+%Why 
+%How
+%
+\begin{itemize}
+	\item General description of it.
+	\item What is it?
+	\item Why are we using it?
+	\item How are we using it?
+\end{itemize}
+%
+
+
+\section{Simulation methodology}
+\subsection{Input files and preprocessing}
+%
+\begin{itemize}
+	\item What are the arguments accepted by the program and why are they relevant?
+	\item Pseudo-random initialization of particles.
+	\item Explanation of particle interactions.
+	\item Explanation of OpenACC implementation.
+\end{itemize}
+%
+
+%Particle outputs
+%Interactions
+%Implementation of OpenACC
+
+\subsection{Postprocessing and visualization}
+%Paraview 
+%VMD Files
+%
+\begin{itemize}
+	\item Explain how, for every frame, we keep the position $\mathbf{x} \in \mathbb{R}^3$ of all particles. Possibly mention something about the format of the VTK files.
+	\item Process each of the files using ParaView.
+	\item Possibly mention what we know about ParaView and what is relevant about it. Why does it help us?
+\end{itemize}
+%
+
+\section{Experimental results}
+
+
+\subsection{Credibility of Particle Simulations}
+%
+\begin{itemize}
+	\item Parallel vs serial results.
+	\item Comparison against state-of-the-art software? (accuracy?)
+	\item We could compare our results with a real system (e.g., Earth and Moon), but simplicity of our model may not allow for it (let's test such a case?).
+\end{itemize}
+%
+
+\section{Benchmarking and OpenACC Results} 
+\label{sec:benchmarking}
+%
+\begin{itemize}
+	\item How many GPUs were used? How many CPUs were used? What is the exact model used? 
+	\item How great was the speedup from serial to parallel?
+	\item Efficiency...how do we measure it?
+\end{itemize}
+%
+
+\subsection{Roofline}
+%
+\begin{itemize}
+	\item What is it?
+	\item What information does it convey?
+	\item How does it help us?
+\end{itemize}
+%
+
+\subsection{Benchmarks}
+%
+\begin{itemize}
+	\item What is the complexity of the problem we explored?
+\end{itemize}
+%
+
+\subsection{OpenACC}
+%Roofline and Benchmarks
+%
+\begin{itemize}
+	\item Having implemented OpenACC into the code, did we observe a speedup? How big was this speedup?
+\end{itemize}
+%
+
+\section{Conclusion} 
+%
+\begin{itemize}
+	\item Particle simulations: Why are they important? What problem(s) do they solve?
+	\item GPU vs CPU performance; roofline model and benchmarks.
+	\item Type of GPU and CPUs used?
+	\item Thanks to...
+\end{itemize}
+%
+
+\bibliographystyle{plain}
+\bibliography{citations}
+
+\end{document}
+
