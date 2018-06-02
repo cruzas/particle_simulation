@@ -19,9 +19,10 @@ sbatch <<-_EOF
 #SBATCH --job-name=PS${i}
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
-#SBATCH --time=23:59:59
+#SBATCH --time=71:59:59
 #SBATCH --output=./output/ps_${i}.out
 #SBATCH --error=./errors/err_s_${i}.err
+#SBATCH --reservation=janalik_81
 #SBATCH --partition=gpu
 #SBATCH --mem=128000
 
