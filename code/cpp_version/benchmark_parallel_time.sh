@@ -8,7 +8,7 @@ last=${nsteps[$pos]}
 
 filename_parallel="benchmark_parallel_time.txt"
 
-echo "nsteps" "," "time_ns" > $filename_parallel
+echo "nsteps" "," "time_ms" > $filename_parallel
 
 # Test with constant delta_t
 delta_t=0.5

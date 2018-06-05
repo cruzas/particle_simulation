@@ -22,7 +22,6 @@ sbatch <<-_EOF
 #SBATCH --time=23:59:59
 #SBATCH --output=./output/ps_${i}.out
 #SBATCH --error=./errors/err_s_${i}.err
-#SBATCH --reservation=janalik_81
 #SBATCH --partition=gpu
 #SBATCH --mem=128000
 

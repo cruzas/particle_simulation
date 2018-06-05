@@ -8,7 +8,7 @@ last=${nsteps[$pos]}
 
 filename_serial="benchmark_serial_time.txt"
 
-echo "nsteps" "," "time_ns" > $filename_serial
+echo "nsteps" "," "time_ms" > $filename_serial
 
 # Test with constant delta_t
 delta_t=0.5
