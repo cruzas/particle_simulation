@@ -1,14 +1,14 @@
 #!/bin/bash
 # Bash script used to collect data on performance of particle simulation.
 
-declare -a nParticles=(1000000 10000000 100000000 1000000000)
+declare -a nParticles=(1000000 2500000 5000000 10000000)
 
 pos=$(( ${#nParticles[*]} - 1 ))
 last=${nParticles[$pos]}
 
 filename_serial="benchmark_serial.txt"
 
-echo "num_particles" "," "time_ns" > $filename_serial
+echo "num_particles" "," "time_ms" > $filename_serial
 
 # Test with constant delta_t
 delta_t=0.5
@@ -19,7 +19,7 @@ sbatch <<-_EOF
 #SBATCH --job-name=PS${i}
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodes=1
-#SBATCH --time=71:59:59
+#SBATCH --time=23:59:59
 #SBATCH --output=./output/ps_${i}.out
 #SBATCH --error=./errors/err_s_${i}.err
 #SBATCH --reservation=janalik_81
@@ -34,6 +34,6 @@ module load gcc/6.1.0
 module load pgi
 
 # run the experiment
-srun ./particles_serial npart=$i delta_t=$delta_t nsteps=100
+srun ./particles_serial npart=$i delta_t=$delta_t nsteps=10
 _EOF
 done
