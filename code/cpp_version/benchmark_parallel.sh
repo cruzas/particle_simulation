@@ -1,14 +1,14 @@
 #!/bin/bash
 # Bash script used to collect data on performance of particle simulation.
 
-declare -a nParticles=(1000000 10000000 100000000 1000000000)
+declare -a nParticles=(1000000 2500000 5000000 10000000)
 
 pos=$(( ${#nParticles[*]} - 1 ))
 last=${nParticles[$pos]}
 
 filename_parallel="benchmark_parallel.txt"
 
-echo "num_particles" "," "time_ns" > $filename_parallel
+echo "num_particles" "," "time_ms" > $filename_parallel
 
 # Test with constant delta_t
 delta_t=0.5
@@ -33,6 +33,6 @@ module load gcc/6.1.0
 module load pgi
 
 # run the experiment
-srun ./particles_parallel npart=$i delta_t=$delta_t nsteps=100
+srun ./particles_parallel npart=$i delta_t=$delta_t nsteps=10
 _EOF
 done
