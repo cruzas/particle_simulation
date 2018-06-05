@@ -100,11 +100,11 @@ int main(int argc, char *argv[]) {
     avg_cpu_time += duration_cast<milliseconds>( t2 - t1 ).count();
 
     // Write file with all particle details in current frame.
-    string filename("positions_" + to_string(i) + ".vtk");
-    if (!write_all_particle_details_to_file(filename)) {
-      cerr << "Could not write file: " << filename << "\n";
-      return -1;
-    }
+    // string filename("positions_" + to_string(i) + ".vtk");
+    // if (!write_all_particle_details_to_file(filename)) {
+    //  cerr << "Could not write file: " << filename << "\n";
+    //  return -1;
+    // }
   }
 
   #pragma acc exit data
